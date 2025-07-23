@@ -1,0 +1,143 @@
+<div class="auth-container">
+  <div class="auth-header">
+    <h1>🎵 TuneBoxにログイン</h1>
+    <p>アカウントにログインして、お気に入りのライブを管理しよう！</p>
+  </div>
+
+  <div class="auth-form">
+    <%= form_with scope: :session, url: login_path, local: true do |form| %>
+      <div class="form-group">
+        <%= form.label :email, "メールアドレス", class: "form-label" %>
+        <%= form.email_field :email, class: "form-input", placeholder: "example@email.com" %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :password, "パスワード", class: "form-label" %>
+        <%= form.password_field :password, class: "form-input", placeholder: "パスワードを入力してください" %>
+      </div>
+
+      <div class="form-actions">
+        <%= form.submit "ログイン", class: "btn btn-primary btn-full" %>
+      </div>
+    <% end %>
+
+    <div class="auth-links">
+      <p>アカウントをお持ちでない方は</p>
+      <%= link_to "新規登録はこちら", signup_path, class: "link" %>
+    </div>
+  </div>
+</div>
+
+<style>
+  .auth-container {
+    max-width: 500px;
+    margin: 40px auto;
+    padding: 20px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  .auth-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .auth-header h1 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 2.2em;
+  }
+
+  .auth-header p {
+    color: #7f8c8d;
+    font-size: 1.1em;
+  }
+
+  .auth-form {
+    background: white;
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 40px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .form-group {
+    margin-bottom: 25px;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #2c3e50;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+  }
+
+  .form-actions {
+    margin-top: 30px;
+  }
+
+  .btn {
+    padding: 15px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+  }
+
+  .btn-full {
+    width: 100%;
+  }
+
+  .auth-links {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #ecf0f1;
+  }
+
+  .auth-links p {
+    margin-bottom: 10px;
+    color: #7f8c8d;
+  }
+
+  .link {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  .link:hover {
+    color: #2980b9;
+    text-decoration: underline;
+  }
+</style>

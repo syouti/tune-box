@@ -1,0 +1,261 @@
+<div class="container">
+  <div class="back-link">
+    <%= link_to "← ライブ一覧に戻る", live_events_path, class: "btn btn-back" %>
+  </div>
+
+  <div class="live-event-detail">
+    <div class="event-header">
+      <h1><%= @live_event.title %></h1>
+      <span class="prefecture-tag"><%= @live_event.prefecture %></span>
+    </div>
+
+    <div class="event-main-info">
+      <div class="info-row">
+        <div class="info-icon">🎤</div>
+        <div class="info-content">
+          <h3>アーティスト</h3>
+          <p><%= @live_event.artist %></p>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-icon">📍</div>
+        <div class="info-content">
+          <h3>会場</h3>
+          <p><%= @live_event.venue %></p>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-icon">📅</div>
+        <div class="info-content">
+          <h3>開催日時</h3>
+          <p><%= @live_event.date.strftime("%Y年%m月%d日（%a） %H:%M開演") if @live_event.date %></p>
+        </div>
+      </div>
+
+      <% if @live_event.price %>
+        <div class="info-row">
+          <div class="info-icon">💴</div>
+          <div class="info-content">
+            <h3>チケット価格</h3>
+            <p class="price">¥<%= number_with_delimiter(@live_event.price) %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @live_event.description.present? %>
+      <div class="description-section">
+        <h3>詳細情報</h3>
+        <div class="description-content">
+          <%= simple_format(@live_event.description) %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="action-buttons">
+      <% if @live_event.ticket_url.present? %>
+        <%= link_to "🎫 チケットを購入", @live_event.ticket_url,
+            target: "_blank",
+            class: "btn btn-ticket",
+            rel: "noopener noreferrer" %>
+      <% end %>
+
+      <%= link_to "編集", edit_live_event_path(@live_event), class: "btn btn-edit" %>
+      <%= link_to "削除", live_event_path(@live_event),
+          method: :delete,
+          class: "btn btn-delete",
+          confirm: "本当に削除しますか？" %>
+    </div>
+
+    <div class="event-meta">
+      <p class="created-at">
+        登録日: <%= @live_event.created_at.strftime("%Y年%m月%d日") if @live_event.created_at %>
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  .back-link {
+    margin-bottom: 20px;
+  }
+
+  .btn-back {
+    background: #ecf0f1;
+    color: #2c3e50;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: normal;
+  }
+
+  .btn-back:hover {
+    background: #d5dbdb;
+  }
+
+  .live-event-detail {
+    background: white;
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+
+  .event-header {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    padding: 30px;
+    text-align: center;
+    position: relative;
+  }
+
+  .event-header h1 {
+    margin: 0 0 15px 0;
+    font-size: 2.2em;
+    font-weight: bold;
+  }
+
+  .prefecture-tag {
+    background: rgba(255,255,255,0.3);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .event-main-info {
+    padding: 30px;
+  }
+
+  .info-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f1f2f6;
+  }
+
+  .info-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .info-icon {
+    font-size: 24px;
+    margin-right: 20px;
+    margin-top: 5px;
+  }
+
+  .info-content h3 {
+    margin: 0 0 8px 0;
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  .info-content p {
+    margin: 0;
+    font-size: 18px;
+    color: #444;
+  }
+
+  .price {
+    font-weight: bold;
+    color: #e74c3c;
+    font-size: 20px !important;
+  }
+
+  .description-section {
+    background: #f8f9fa;
+    padding: 30px;
+    border-top: 1px solid #e1e8ed;
+  }
+
+  .description-section h3 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+  }
+
+  .description-content {
+    line-height: 1.6;
+    color: #555;
+  }
+
+  .action-buttons {
+    padding: 30px;
+    text-align: center;
+    border-top: 1px solid #e1e8ed;
+    background: #fafbfc;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 12px 24px;
+    margin: 0 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .btn-ticket {
+    background: #e74c3c;
+    color: white;
+    font-size: 18px;
+  }
+
+  .btn-edit {
+    background: #f39c12;
+    color: white;
+  }
+
+  .btn-delete {
+    background: #7f8c8d;
+    color: white;
+  }
+
+  .btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .event-meta {
+    padding: 15px 30px;
+    background: #f8f9fa;
+    border-top: 1px solid #e1e8ed;
+    text-align: center;
+  }
+
+  .created-at {
+    margin: 0;
+    color: #7f8c8d;
+    font-size: 14px;
+  }
+
+  @media (max-width: 600px) {
+    .action-buttons .btn {
+      display: block;
+      margin: 10px 0;
+    }
+
+    .info-row {
+      flex-direction: column;
+    }
+
+    .info-icon {
+      margin-bottom: 10px;
+    }
+  }
+</style>

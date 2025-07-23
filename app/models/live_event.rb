@@ -1,0 +1,2 @@
+class LiveEvent < ApplicationRecord
+end

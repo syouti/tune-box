@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  title: MyString
+  artist: MyString
+  venue: MyString
+  date: 2025-07-21 12:01:53
+  description: MyText
+  ticket_url: MyString
+  price: 1
+  prefecture: MyString
+
+two:
+  title: MyString
+  artist: MyString
+  venue: MyString
+  date: 2025-07-21 12:01:53
+  description: MyText
+  ticket_url: MyString
+  price: 1
+  prefecture: MyString

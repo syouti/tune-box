@@ -1,0 +1,185 @@
+<div class="container">
+  <div class="header">
+    <h1>🎵 新しいライブを追加</h1>
+    <p>ライブ・コンサート情報を登録してみんなと共有しよう！</p>
+  </div>
+
+  <div class="form-container">
+    <%= form_with(model: @live_event, local: true) do |form| %>
+      <% if @live_event.errors.any? %>
+        <div class="error-messages">
+          <h4><%= pluralize(@live_event.errors.count, "error") %> prohibited this live event from being saved:</h4>
+          <ul>
+            <% @live_event.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="form-group">
+        <%= form.label :title, "ライブタイトル", class: "form-label" %>
+        <%= form.text_field :title, class: "form-input", placeholder: "例: 春のロックフェスティバル 2025" %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :artist, "アーティスト名", class: "form-label" %>
+        <%= form.text_field :artist, class: "form-input", placeholder: "例: あいみょん" %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :venue, "会場名", class: "form-label" %>
+        <%= form.text_field :venue, class: "form-input", placeholder: "例: 東京ドーム" %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :prefecture, "都道府県", class: "form-label" %>
+        <%= form.select :prefecture,
+            options_for_select([
+              ['東京都', '東京都'], ['大阪府', '大阪府'], ['神奈川県', '神奈川県'],
+              ['愛知県', '愛知県'], ['福岡県', '福岡県'], ['北海道', '北海道'],
+              ['宮城県', '宮城県'], ['埼玉県', '埼玉県'], ['千葉県', '千葉県'],
+              ['兵庫県', '兵庫県'], ['京都府', '京都府'], ['広島県', '広島県'],
+              ['静岡県', '静岡県'], ['茨城県', '茨城県'], ['栃木県', '栃木県'],
+              ['群馬県', '群馬県'], ['新潟県', '新潟県'], ['長野県', '長野県'],
+              ['山梨県', '山梨県'], ['富山県', '富山県'], ['石川県', '石川県'],
+              ['福井県', '福井県'], ['岐阜県', '岐阜県'], ['三重県', '三重県'],
+              ['滋賀県', '滋賀県'], ['奈良県', '奈良県'], ['和歌山県', '和歌山県'],
+              ['鳥取県', '鳥取県'], ['島根県', '島根県'], ['岡山県', '岡山県'],
+              ['山口県', '山口県'], ['徳島県', '徳島県'], ['香川県', '香川県'],
+              ['愛媛県', '愛媛県'], ['高知県', '高知県'], ['佐賀県', '佐賀県'],
+              ['長崎県', '長崎県'], ['熊本県', '熊本県'], ['大分県', '大分県'],
+              ['宮崎県', '宮崎県'], ['鹿児島県', '鹿児島県'], ['沖縄県', '沖縄県']
+            ], { prompt: '都道府県を選択してください' }),
+            { class: "form-input" } %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :date, "開催日時", class: "form-label" %>
+        <%= form.datetime_local_field :date, class: "form-input" %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :price, "チケット価格（円）", class: "form-label" %>
+        <%= form.number_field :price, class: "form-input", placeholder: "例: 8000" %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :ticket_url, "チケット購入URL", class: "form-label" %>
+        <%= form.url_field :ticket_url, class: "form-input", placeholder: "例: https://ticket.example.com" %>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :description, "詳細説明", class: "form-label" %>
+        <%= form.text_area :description, class: "form-textarea", rows: 5, placeholder: "ライブの詳細情報、出演者、注意事項など..." %>
+      </div>
+
+      <div class="form-actions">
+        <%= form.submit "ライブを追加", class: "btn btn-primary" %>
+        <%= link_to "キャンセル", live_events_path, class: "btn btn-secondary" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<style>
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .header h1 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+  }
+
+  .form-container {
+    background: white;
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #2c3e50;
+    font-weight: bold;
+  }
+
+  .form-input, .form-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+
+  .form-input:focus, .form-textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+  }
+
+  .form-actions {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 16px;
+  }
+
+  .btn-primary {
+    background: #3498db;
+    color: white;
+  }
+
+  .btn-secondary {
+    background: #95a5a6;
+    color: white;
+  }
+
+  .btn:hover {
+    opacity: 0.9;
+  }
+
+  .error-messages {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+
+  .error-messages h4 {
+    margin-top: 0;
+  }
+
+  .error-messages ul {
+    margin-bottom: 0;
+  }
+</style>
