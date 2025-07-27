@@ -44,6 +44,27 @@ class LiveEventsController < ApplicationController
     end
   end
 
+  # お気に入り機能のアクションを追加
+  def favorite
+    @live_event = LiveEvent.find(params[:id])
+
+    # 既にお気に入りに追加されているかチェック
+    unless current_user.favorited?(@live_event)
+      @favorite = current_user.favorites.build(live_event: @live_event)
+      @favorite.save
+    end
+
+    redirect_back(fallback_location: live_events_path)
+  end
+
+  def unfavorite
+    @live_event = LiveEvent.find(params[:id])
+    @favorite = current_user.favorites.find_by(live_event: @live_event)
+    @favorite&.destroy
+
+    redirect_back(fallback_location: live_events_path)
+  end
+
   private
 
   def live_event_params

@@ -3,7 +3,12 @@ Rails.application.routes.draw do
   root 'live_events#index'
 
   # ライブイベント関連のルート
-  resources :live_events
+  resources :live_events do
+    member do
+      post 'favorite'     # お気に入りに追加
+      delete 'unfavorite' # お気に入りから削除
+    end
+  end
 
   # ユーザー認証関連のルート
   get 'signup', to: 'users#new'

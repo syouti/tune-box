@@ -10,7 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_21_084633) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_27_201318) do
+  create_table "favorites", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "live_event_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["live_event_id"], name: "index_favorites_on_live_event_id"
+    t.index ["user_id", "live_event_id"], name: "index_favorites_on_user_id_and_live_event_id", unique: true
+    t.index ["user_id"], name: "index_favorites_on_user_id"
+  end
+
   create_table "live_events", force: :cascade do |t|
     t.string "title"
     t.string "artist"
@@ -32,4 +42,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_21_084633) do
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
   end
+
+  add_foreign_key "favorites", "live_events"
+  add_foreign_key "favorites", "users"
 end

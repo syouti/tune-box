@@ -1,0 +1,28 @@
+<div class="favorite-button" data-live-event-id="<%= live_event.id %>">
+  <% if current_user %>
+    <% if current_user.favorited?(live_event) %>
+      <%= button_to unfavorite_live_event_path(live_event),
+                    method: :delete,
+                    remote: true,
+                    class: "heart-button favorited",
+                    title: "お気に入りから削除" do %>
+        <i class="heart-icon">❤️</i>
+        <span class="favorite-count"><%= live_event.favorites.count %></span>
+      <% end %>
+    <% else %>
+      <%= button_to favorite_live_event_path(live_event),
+                    method: :post,
+                    remote: true,
+                    class: "heart-button not-favorited",
+                    title: "お気に入りに追加" do %>
+        <i class="heart-icon">🤍</i>
+        <span class="favorite-count"><%= live_event.favorites.count %></span>
+      <% end %>
+    <% end %>
+  <% else %>
+    <%= link_to login_path, class: "heart-button login-required", title: "ログインしてお気に入り登録" do %>
+      <i class="heart-icon">🤍</i>
+      <span class="favorite-count">0</span>
+    <% end %>
+  <% end %>
+</div>

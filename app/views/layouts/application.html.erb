@@ -1,22 +1,293 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Tune Box" %></title>
+    <title>TuneBox - ライブ情報検索サイト</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <%= yield :head %>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="manifest" href="/manifest.json">
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+
+    <style>
+      body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .navbar-brand {
+        font-weight: 700;
+        font-size: 1.8rem;
+      }
+
+      .navbar {
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95) !important;
+      }
+
+      .main-content {
+        min-height: calc(100vh - 200px);
+        background: white;
+        border-radius: 20px 20px 0 0;
+        margin-top: 20px;
+        box-shadow: 0 -5px 30px rgba(0,0,0,0.1);
+      }
+
+      .footer {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        margin-top: auto;
+      }
+
+      .btn-gradient {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        border: none;
+        color: white;
+        transition: all 0.3s ease;
+      }
+
+      .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        color: white;
+      }
+
+      .notification-badge {
+        position: relative;
+        top: -2px;
+        right: 5px;
+        background: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        padding: 2px 6px;
+        font-size: 0.7rem;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+      }
+
+      .social-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: white;
+      }
+
+      .social-icon:hover {
+        background: rgba(255,255,255,0.2);
+        transform: translateY(-3px);
+        color: white;
+      }
+
+      .hover-card {
+        transition: all 0.3s ease;
+      }
+
+      .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+      }
+    </style>
   </head>
 
   <body>
-    <%= yield %>
+    <!-- ナビゲーションヘッダー -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+      <div class="container">
+        <%= link_to root_path, class: "navbar-brand text-primary" do %>
+          <i class="fas fa-music me-2"></i>TuneBox
+        <% end %>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <%= link_to "ライブ一覧", root_path, class: "nav-link #{'active' if current_page?(root_path)}" %>
+            </li>
+            <li class="nav-item">
+              <%= link_to "新規投稿", new_live_event_path, class: "nav-link #{'active' if current_page?(new_live_event_path)}" %>
+            </li>
+            <% if defined?(current_user) && current_user %>
+              <li class="nav-item">
+                <%= link_to user_path(current_user), class: "nav-link #{'active' if current_page?(user_path(current_user))}" do %>
+                  <i class="fas fa-heart me-1"></i>お気に入り
+                  <span class="notification-badge">3</span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+
+          <ul class="navbar-nav">
+            <% if defined?(current_user) && current_user %>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-user-circle me-2"></i>
+                  <%= current_user.name %>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><%= link_to "マイページ", user_path(current_user), class: "dropdown-item" %></li>
+                  <li><%= link_to "プロフィール編集", "#", class: "dropdown-item" %></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><%= link_to "ログアウト", logout_path, method: :delete, class: "dropdown-item text-danger" %></li>
+                </ul>
+              </li>
+            <% else %>
+              <li class="nav-item me-2">
+                <%= link_to "ログイン", login_path, class: "btn btn-outline-primary" %>
+              </li>
+              <li class="nav-item">
+                <%= link_to "新規登録", signup_path, class: "btn btn-gradient" %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- メインコンテンツ -->
+    <div class="container-fluid" style="padding-top: 80px;">
+      <div class="container">
+        <div class="main-content p-4">
+          <!-- フラッシュメッセージ -->
+          <% flash.each do |type, message| %>
+            <div class="alert alert-<%= type == 'notice' ? 'success' : 'danger' %> alert-dismissible fade show" role="alert">
+              <i class="fas fa-<%= type == 'notice' ? 'check-circle' : 'exclamation-triangle' %> me-2"></i>
+              <%= message %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          <% end %>
+
+          <%= yield %>
+        </div>
+      </div>
+    </div>
+
+    <!-- フッター -->
+    <footer class="footer mt-5">
+      <div class="container py-5">
+        <div class="row">
+          <div class="col-lg-4 mb-4">
+            <h5 class="mb-3">
+              <i class="fas fa-music me-2"></i>TuneBox
+            </h5>
+            <p class="text-muted">
+              日本全国のライブ・コンサート情報を簡単に検索できるプラットフォーム。
+              音楽好きのための、音楽好きによるサービスです。
+            </p>
+            <div class="d-flex gap-3">
+              <a href="#" class="social-icon">
+                <i class="fab fa-twitter"></i>
+              </a>
+              <a href="#" class="social-icon">
+                <i class="fab fa-instagram"></i>
+              </a>
+              <a href="#" class="social-icon">
+                <i class="fab fa-facebook"></i>
+              </a>
+              <a href="#" class="social-icon">
+                <i class="fab fa-youtube"></i>
+              </a>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-6 mb-4">
+            <h6 class="mb-3">サービス</h6>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">ライブ検索</a></li>
+              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">会場情報</a></li>
+              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">アーティスト</a></li>
+              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">チケット</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-6 mb-4">
+            <h6 class="mb-3">サポート</h6>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">よくある質問</a></li>
+              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">お問い合わせ</a></li>
+              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">利用規約</a></li>
+              <li class="mb-2"><a href="#" class="text-muted text-decoration-none">プライバシー</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-4 mb-4">
+            <h6 class="mb-3">ニュースレター</h6>
+            <p class="text-muted mb-3">
+              最新のライブ情報や特別なお知らせを受け取りませんか？
+            </p>
+            <div class="input-group">
+              <input type="email" class="form-control" placeholder="メールアドレス">
+              <button class="btn btn-gradient" type="button">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <p class="text-muted mb-0">
+              &copy; 2025 TuneBox. All rights reserved.
+            </p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <p class="text-muted mb-0">
+              Made with <i class="fas fa-heart text-danger"></i> for Music Lovers
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Bootstrap JavaScript CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      // スムーススクロール
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute('href'));
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      });
+
+      // アラートの自動消去
+      setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+          if (window.bootstrap && window.bootstrap.Alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+          }
+        });
+      }, 5000);
+    </script>
   </body>
 </html>

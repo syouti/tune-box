@@ -1,31 +1,32 @@
-<div class="container">
-  <div class="header">
-    <h1>🎵 TuneBox - ライブ情報検索</h1>
-    <p>日本全国のライブ・コンサート情報をチェック！</p>
-
-    <div class="auth-nav">
-      <% if logged_in? %>
-        <span class="welcome">ようこそ、<%= current_user.name %>さん！</span>
-        <%= link_to "マイページ", user_path(current_user), class: "btn btn-secondary" %>
-        <%= link_to "ログアウト", logout_path, class: "btn btn-secondary" %>
-      <% else %>
-        <%= link_to "新規登録", signup_path, class: "btn btn-signup" %>
-        <%= link_to "ログイン", login_path, class: "btn btn-login" %>
-      <% end %>
-    </div>
+<!-- ページタイトル -->
+<div class="row align-items-center mb-4">
+  <div class="col">
+    <h1 class="display-5 fw-bold text-primary mb-2">
+      <i class="fas fa-search me-3"></i>ライブ検索
+    </h1>
+    <p class="lead text-muted">全国のライブ・コンサート情報をチェックしよう！</p>
   </div>
+</div>
 
-  <div class="search-section">
+<!-- 検索セクション -->
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
     <%= form_with url: live_events_path, method: :get, local: true, class: "search-form" do |form| %>
-      <div class="search-row">
-        <div class="search-field">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-search me-1"></i>キーワード検索
+          </label>
           <%= form.text_field :search,
               value: params[:search],
-              placeholder: "アーティスト名、ライブタイトル、会場名で検索...",
-              class: "search-input" %>
+              placeholder: "アーティスト名、ライブタイトル、会場名...",
+              class: "form-control form-control-lg" %>
         </div>
 
-        <div class="search-field">
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-map-marker-alt me-1"></i>都道府県
+          </label>
           <%= form.select :prefecture,
               options_for_select([
                 ['全ての都道府県', ''],
@@ -35,384 +36,149 @@
                 ['兵庫県', '兵庫県'], ['京都府', '京都府'], ['広島県', '広島県']
               ], params[:prefecture]),
               {},
-              { class: "search-select" } %>
+              { class: "form-select form-select-lg" } %>
         </div>
 
-        <div class="search-buttons">
-          <%= form.submit "🔍 検索", class: "btn btn-search" %>
-          <%= link_to "クリア", live_events_path, class: "btn btn-clear" %>
-        </div>
-      </div>
-
-      <div class="date-search-row">
-        <div class="date-field">
-          <%= form.label :date_from, "開催日:", class: "date-label" %>
-          <%= form.date_field :date_from, value: params[:date_from], class: "date-input" %>
-          <span class="date-separator">〜</span>
-          <%= form.date_field :date_to, value: params[:date_to], class: "date-input" %>
-        </div>
-      </div>
-    <% end %>
-  </div>
-
-  <div class="actions">
-    <%= link_to "新しいライブを追加", new_live_event_path, class: "btn btn-primary" %>
-  </div>
-
-  <div class="live-events">
-    <% if @live_events.any? %>
-      <% @live_events.each do |live_event| %>
-        <div class="live-event-card">
-          <div class="event-header">
-            <h3><%= link_to live_event.title, live_event_path(live_event) %></h3>
-            <span class="prefecture"><%= live_event.prefecture %></span>
-          </div>
-
-          <div class="event-details">
-            <p class="artist">🎤 <strong><%= live_event.artist %></strong></p>
-            <p class="venue">📍 <%= live_event.venue %></p>
-            <p class="date">📅 <%= live_event.date.strftime("%Y年%m月%d日 %H:%M") if live_event.date %></p>
-            <% if live_event.price %>
-              <p class="price">💴 ¥<%= number_with_delimiter(live_event.price) %></p>
-            <% end %>
-          </div>
-
-          <% if live_event.description.present? %>
-            <p class="description"><%= truncate(live_event.description, length: 100) %></p>
-          <% end %>
-
-          <div class="event-actions">
-            <%= link_to "詳細を見る", live_event_path(live_event), class: "btn btn-outline" %>
-            <% if live_event.ticket_url.present? %>
-              <%= link_to "チケット購入", live_event.ticket_url, target: "_blank", class: "btn btn-ticket" %>
-            <% end %>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-calendar me-1"></i>開催日
+          </label>
+          <div class="input-group">
+            <%= form.date_field :date_from, value: params[:date_from], class: "form-control" %>
+            <span class="input-group-text">〜</span>
+            <%= form.date_field :date_to, value: params[:date_to], class: "form-control" %>
           </div>
         </div>
-      <% end %>
-    <% else %>
-      <div class="empty-state">
-        <h3>まだライブ情報がありません</h3>
-        <p>最初のライブ情報を追加してみましょう！</p>
-        <%= link_to "ライブを追加する", new_live_event_path, class: "btn btn-primary" %>
+
+        <div class="col-md-2">
+          <div class="d-grid gap-2">
+            <%= form.submit "🔍 検索", class: "btn btn-gradient btn-lg" %>
+            <%= link_to "クリア", live_events_path, class: "btn btn-outline-secondary" %>
+          </div>
+        </div>
       </div>
     <% end %>
   </div>
 </div>
 
+<!-- ライブ一覧 -->
+<div class="row">
+  <% if @live_events.any? %>
+    <% @live_events.each do |live_event| %>
+      <div class="col-lg-6 mb-4">
+        <div class="card h-100 shadow-sm hover-card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <h5 class="card-title text-primary mb-0">
+                <%= link_to live_event.title, live_event_path(live_event),
+                    class: "text-decoration-none text-primary" %>
+              </h5>
+              <span class="badge bg-primary"><%= live_event.prefecture %></span>
+            </div>
+
+            <div class="mb-3">
+              <p class="mb-2 text-dark">
+                <i class="fas fa-microphone-alt text-primary me-2"></i>
+                <strong><%= live_event.artist %></strong>
+              </p>
+              <p class="mb-2 text-muted">
+                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                <%= live_event.venue %>
+              </p>
+              <p class="mb-2 text-muted">
+                <i class="fas fa-calendar-alt text-primary me-2"></i>
+                <%= live_event.date.strftime("%Y年%m月%d日 %H:%M") if live_event.date %>
+              </p>
+              <% if live_event.price %>
+                <p class="mb-2 text-success fw-bold">
+                  <i class="fas fa-yen-sign text-primary me-2"></i>
+                  ¥<%= number_with_delimiter(live_event.price) %>
+                </p>
+              <% end %>
+            </div>
+
+            <% if live_event.description.present? %>
+              <p class="card-text text-muted small mb-3">
+                <%= truncate(live_event.description, length: 80) %>
+              </p>
+            <% end %>
+
+            <div class="d-flex justify-content-between align-items-center">
+              <!-- お気に入りボタン -->
+              <div class="favorite-section">
+                <% if current_user %>
+                  <% if current_user.favorited?(live_event) %>
+                    <%= button_to unfavorite_live_event_path(live_event),
+                                  method: :delete,
+                                  class: "btn btn-outline-danger btn-sm",
+                                  title: "お気に入りから削除" do %>
+                      <i class="fas fa-heart me-1"></i>
+                      <span class="badge bg-danger"><%= live_event.favorites.count %></span>
+                    <% end %>
+                  <% else %>
+                    <%= button_to favorite_live_event_path(live_event),
+                                  method: :post,
+                                  class: "btn btn-outline-primary btn-sm",
+                                  title: "お気に入りに追加" do %>
+                      <i class="far fa-heart me-1"></i>
+                      <span class="badge bg-primary"><%= live_event.favorites.count %></span>
+                    <% end %>
+                  <% end %>
+                <% else %>
+                  <%= link_to login_path, class: "btn btn-outline-secondary btn-sm",
+                      title: "ログインしてお気に入り登録" do %>
+                    <i class="far fa-heart me-1"></i>
+                    <span class="badge bg-secondary">0</span>
+                  <% end %>
+                <% end %>
+              </div>
+
+              <!-- アクションボタン -->
+              <div class="btn-group">
+                <%= link_to "詳細", live_event_path(live_event),
+                    class: "btn btn-outline-primary btn-sm" %>
+                <% if live_event.ticket_url.present? %>
+                  <%= link_to "チケット", live_event.ticket_url, target: "_blank",
+                      class: "btn btn-success btn-sm" %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="col-12">
+      <div class="text-center py-5">
+        <i class="fas fa-music text-muted mb-3" style="font-size: 4rem;"></i>
+        <h3 class="text-muted">ライブ情報が見つかりませんでした</h3>
+        <p class="text-muted mb-4">検索条件を変更するか、新しいライブ情報を追加してみてください。</p>
+        <%= link_to "ライブを追加する", new_live_event_path, class: "btn btn-gradient btn-lg" %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
 <style>
-  .search-section {
-    background: white;
-    border: 1px solid #e1e8ed;
-    border-radius: 8px;
-    padding: 25px;
-    margin-bottom: 30px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  .hover-card {
+    transition: all 0.3s ease;
   }
 
-  .search-form {
-    margin: 0;
+  .hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
   }
 
-  .search-row {
-    display: flex;
-    gap: 15px;
-    align-items: end;
-    margin-bottom: 15px;
-  }
-
-  .search-field {
-    flex: 1;
-  }
-
-  .search-input, .search-select {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    box-sizing: border-box;
-  }
-
-  .search-input:focus, .search-select:focus {
-    outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
-  }
-
-  .search-buttons {
-    display: flex;
-    gap: 10px;
-  }
-
-  .btn-search {
-    background: #3498db;
-    color: white;
-    padding: 12px 20px;
+  .btn-gradient {
+    background: linear-gradient(45deg, #667eea, #764ba2);
     border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-
-  .btn-clear {
-    background: #95a5a6;
     color: white;
-    padding: 12px 16px;
-    border: none;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: bold;
+    transition: all 0.3s ease;
   }
 
-  .date-search-row {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
-
-  .date-field {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .date-label {
-    font-weight: bold;
-    color: #2c3e50;
-    white-space: nowrap;
-  }
-
-  .date-input {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-  }
-
-  .date-separator {
-    color: #7f8c8d;
-    font-weight: bold;
-  }
-
-  @media (max-width: 768px) {
-    .search-row {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .search-buttons {
-      justify-content: center;
-    }
-
-    .date-search-row {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .date-field {
-      justify-content: center;
-    }
-  }
-
-  .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-  }
-
-  .header {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-
-  .header h1 {
-    color: #2c3e50;
-    margin-bottom: 10px;
-  }
-
-  .header {
-    text-align: center;
-    margin-bottom: 30px;
-    position: relative;
-    padding-top: 50px; /* ナビゲーション用のスペースを確保 */
-  }
-
-  .header h1 {
-    color: #2c3e50;
-    margin-bottom: 10px;
-  }
-
-  .auth-nav {
-    position: absolute;
-    top: 0;
-    right: 0;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    background: white;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-
-  .welcome {
-    color: #2c3e50;
-    font-weight: bold;
-    margin-right: 15px;
-    white-space: nowrap; /* 改行を防ぐ */
-  }
-
-  .btn-signup {
-    background: #e74c3c;
+  .btn-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     color: white;
-    padding: 8px 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 14px;
-  }
-
-  .btn-login {
-    background: #3498db;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 14px;
-  }
-
-  .btn-secondary {
-    background: #95a5a6;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 14px;
-    border: none;
-    cursor: pointer;
-  }
-
-  .btn-signup:hover, .btn-login:hover, .btn-secondary:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-
-  @media (max-width: 768px) {
-    .header {
-      padding-top: 80px; /* モバイルでより多くのスペース */
-    }
-
-    .auth-nav {
-      position: static;
-      justify-content: center;
-      margin-top: 15px;
-      flex-wrap: wrap;
-      box-shadow: none;
-      background: transparent;
-    }
-
-    .welcome {
-      margin-right: 10px;
-      margin-bottom: 10px;
-    }
-  }
-
-  .actions {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-
-  .live-event-card {
-    background: white;
-    border: 1px solid #e1e8ed;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-
-  .event-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-  }
-
-  .event-header h3 {
-    margin: 0;
-    color: #2c3e50;
-  }
-
-  .event-header h3 a {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .event-header h3 a:hover {
-    color: #3498db;
-  }
-
-  .prefecture {
-    background: #3498db;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-  }
-
-  .event-details p {
-    margin: 5px 0;
-    color: #555;
-  }
-
-  .description {
-    margin: 15px 0;
-    color: #666;
-    font-style: italic;
-  }
-
-  .event-actions {
-    margin-top: 15px;
-    display: flex;
-    gap: 10px;
-  }
-
-  .btn {
-    padding: 8px 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-    display: inline-block;
-  }
-
-  .btn-primary {
-    background: #3498db;
-    color: white;
-  }
-
-  .btn-outline {
-    border: 1px solid #3498db;
-    color: #3498db;
-    background: white;
-  }
-
-  .btn-ticket {
-    background: #e74c3c;
-    color: white;
-  }
-
-  .btn:hover {
-    opacity: 0.9;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 40px;
-    color: #666;
   }
 </style>
