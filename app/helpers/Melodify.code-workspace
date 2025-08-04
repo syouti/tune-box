@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "../../../../Melodify"
+		},
+		{
+			"name": "tune-box",
+			"path": "../.."
+		}
+	],
+	"settings": {}
+}
