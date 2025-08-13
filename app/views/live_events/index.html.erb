@@ -1,21 +1,117 @@
 <!-- ページタイトル -->
-<div class="row align-items-center mb-4">
+<div class="row align-items-center mb-4 fade-in">
   <div class="col">
-    <h1 class="display-5 fw-bold text-primary mb-2">
-      <i class="fas fa-search me-3"></i>ライブ検索
+    <h1 class="display-5 fw-bold text-primary mb-2 title-hover">
+      <i class="fas fa-search me-3 icon-pulse"></i>ライブ検索
     </h1>
-    <p class="lead text-muted">全国のライブ・コンサート情報をチェックしよう！</p>
+    <p class="lead text-muted slide-in">全国のライブ・コンサート情報をチェックしよう！</p>
   </div>
 </div>
 
+<style>
+  /* 基本アニメーション */
+  .fade-in {
+    opacity: 0;
+    animation: fadeInUp 0.8s ease forwards;
+  }
+  
+  .slide-in {
+    opacity: 0;
+    transform: translateX(-30px);
+    animation: slideInLeft 1s ease 0.3s forwards;
+  }
+  
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideInLeft {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  /* ホバー効果 */
+  .title-hover:hover {
+    transform: scale(1.02);
+    transition: all 0.3s ease;
+    text-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+  }
+  
+  /* アイコンアニメーション */
+  .icon-pulse {
+    animation: iconPulse 2s infinite;
+  }
+  
+  @keyframes iconPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+  }
+  
+  /* カードホバー効果 */
+  .hover-card {
+    transition: all 0.3s ease;
+  }
+  
+  .hover-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15) !important;
+  }
+  
+  /* 検索カードのホバー */
+  .search-card:hover {
+    transform: translateY(-3px);
+    transition: all 0.3s ease;
+  }
+  
+  /* ボタンのホバー効果 */
+  .btn:hover {
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+  }
+  
+  /* アイコンの個別アニメーション */
+  .icon-rotate:hover {
+    transform: rotateY(360deg);
+    transition: transform 0.6s ease;
+  }
+  
+  .icon-bounce:hover {
+    animation: iconBounce 0.6s ease;
+  }
+  
+  @keyframes iconBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+  
+  /* バッジのパルス */
+  .badge {
+    animation: badgePulse 3s infinite;
+  }
+  
+  @keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+</style>
+
+<div class="alert alert-success">
+  🎉 複数のアニメーションが追加されました！各要素にマウスを載せてみてください。
+</div>
+
 <!-- 検索セクション -->
-<div class="card shadow-sm mb-4">
+<div class="card shadow-sm mb-4 search-card">
   <div class="card-body">
     <%= form_with url: live_events_path, method: :get, local: true, class: "search-form" do |form| %>
       <div class="row g-3 align-items-end">
         <div class="col-md-4">
           <label class="form-label fw-semibold">
-            <i class="fas fa-search me-1"></i>キーワード検索
+            <i class="fas fa-search me-1 icon-rotate"></i>キーワード検索
           </label>
           <%= form.text_field :search,
               value: params[:search],
@@ -25,7 +121,7 @@
 
         <div class="col-md-3">
           <label class="form-label fw-semibold">
-            <i class="fas fa-map-marker-alt me-1"></i>都道府県
+            <i class="fas fa-map-marker-alt me-1 icon-bounce"></i>都道府県
           </label>
           <%= form.select :prefecture,
               options_for_select([
@@ -41,7 +137,7 @@
 
         <div class="col-md-3">
           <label class="form-label fw-semibold">
-            <i class="fas fa-calendar me-1"></i>開催日
+            <i class="fas fa-calendar me-1 icon-bounce"></i>開催日
           </label>
           <div class="input-group">
             <%= form.date_field :date_from, value: params[:date_from], class: "form-control" %>
@@ -70,7 +166,7 @@
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-3">
               <h5 class="card-title text-primary mb-0">
-                <%= link_to live_event.title, live_event_path(live_event),
+                <%= link_to live_event.title, live_event_path(live_event), 
                     class: "text-decoration-none text-primary" %>
               </h5>
               <span class="badge bg-primary"><%= live_event.prefecture %></span>
@@ -78,20 +174,20 @@
 
             <div class="mb-3">
               <p class="mb-2 text-dark">
-                <i class="fas fa-microphone-alt text-primary me-2"></i>
+                <i class="fas fa-microphone-alt text-primary me-2 icon-rotate"></i>
                 <strong><%= live_event.artist %></strong>
               </p>
               <p class="mb-2 text-muted">
-                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                <i class="fas fa-map-marker-alt text-primary me-2 icon-bounce"></i>
                 <%= live_event.venue %>
               </p>
               <p class="mb-2 text-muted">
-                <i class="fas fa-calendar-alt text-primary me-2"></i>
+                <i class="fas fa-calendar-alt text-primary me-2 icon-bounce"></i>
                 <%= live_event.date.strftime("%Y年%m月%d日 %H:%M") if live_event.date %>
               </p>
               <% if live_event.price %>
                 <p class="mb-2 text-success fw-bold">
-                  <i class="fas fa-yen-sign text-primary me-2"></i>
+                  <i class="fas fa-yen-sign text-primary me-2 icon-rotate"></i>
                   ¥<%= number_with_delimiter(live_event.price) %>
                 </p>
               <% end %>
@@ -125,7 +221,7 @@
                     <% end %>
                   <% end %>
                 <% else %>
-                  <%= link_to login_path, class: "btn btn-outline-secondary btn-sm",
+                  <%= link_to login_path, class: "btn btn-outline-secondary btn-sm", 
                       title: "ログインしてお気に入り登録" do %>
                     <i class="far fa-heart me-1"></i>
                     <span class="badge bg-secondary">0</span>
@@ -135,10 +231,10 @@
 
               <!-- アクションボタン -->
               <div class="btn-group">
-                <%= link_to "詳細", live_event_path(live_event),
+                <%= link_to "詳細", live_event_path(live_event), 
                     class: "btn btn-outline-primary btn-sm" %>
                 <% if live_event.ticket_url.present? %>
-                  <%= link_to "チケット", live_event.ticket_url, target: "_blank",
+                  <%= link_to "チケット", live_event.ticket_url, target: "_blank", 
                       class: "btn btn-success btn-sm" %>
                 <% end %>
               </div>
@@ -158,27 +254,3 @@
     </div>
   <% end %>
 </div>
-
-<style>
-  .hover-card {
-    transition: all 0.3s ease;
-  }
-
-  .hover-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
-  }
-
-  .btn-gradient {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    border: none;
-    color: white;
-    transition: all 0.3s ease;
-  }
-
-  .btn-gradient:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    color: white;
-  }
-</style>
