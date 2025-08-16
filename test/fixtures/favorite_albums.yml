@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user_id: 1
+  spotify_id: MyString
+  name: MyString
+  artist: MyString
+  image_url: MyString
+  external_url: MyString
+  release_date: MyString
+  total_tracks: 1
+
+two:
+  user_id: 1
+  spotify_id: MyString
+  name: MyString
+  artist: MyString
+  image_url: MyString
+  external_url: MyString
+  release_date: MyString
+  total_tracks: 1

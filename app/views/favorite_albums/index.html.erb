@@ -1,0 +1,452 @@
+<div class="collection-container">
+  <!-- ヘッダー -->
+  <div class="collection-header">
+    <div>
+      <h1><i class="fas fa-palette me-2"></i>マイコレクション</h1>
+      <p class="text-muted mb-0">ジャケット写真を自由に配置してあなただけのコレクションを作成</p>
+    </div>
+    <div class="d-flex align-items-center">
+      <span class="badge bg-primary fs-6 me-3"><%= @favorite_albums.count %> / 20 枚</span>
+      <%= link_to albums_index_path, class: "btn btn-outline-primary me-2" do %>
+        <i class="fas fa-plus me-1"></i>追加
+      <% end %>
+      <button class="btn btn-gradient" onclick="saveLayout()">
+        <i class="fas fa-save me-1"></i>保存
+      </button>
+    </div>
+  </div>
+
+  <!-- レイアウトプリセット -->
+  <div class="d-flex align-items-center mb-3">
+    <span class="text-muted me-3">クイックレイアウト:</span>
+    <div class="layout-presets">
+      <button class="preset-btn" onclick="arrangeGrid()">
+        <i class="fas fa-th me-1"></i>グリッド
+      </button>
+      <button class="preset-btn" onclick="arrangeCircle()">
+        <i class="fas fa-circle-notch me-1"></i>サークル
+      </button>
+      <button class="preset-btn" onclick="arrangeRandom()">
+        <i class="fas fa-random me-1"></i>ランダム
+      </button>
+      <button class="preset-btn" onclick="arrangeShuffle()">
+        <i class="fas fa-shuffle me-1"></i>シャッフル
+      </button>
+    </div>
+  </div>
+
+  <!-- コレクションキャンバス -->
+  <div class="collection-canvas" id="canvas">
+    <% if @favorite_albums.any? %>
+      <% @favorite_albums.each_with_index do |album, index| %>
+        <div class="album-jacket"
+             data-id="<%= album.id %>"
+             data-spotify-id="<%= album.spotify_id %>"
+             style="top: <%= album.position_y || (50 + (index % 4) * 180) %>px; left: <%= album.position_x || (50 + (index % 5) * 180) %>px;">
+          <img src="<%= album.image_url %>" alt="<%= album.name %>">
+          <button class="delete-btn" onclick="removeAlbum(this, '<%= album.spotify_id %>')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="empty-state">
+        <i class="fas fa-heart-broken"></i>
+        <h4>まだコレクションがありません</h4>
+        <p>検索画面でお気に入りのアルバムジャケットを選んでコレクションに追加しましょう！</p>
+        <%= link_to "アルバムを検索", albums_index_path, class: "btn btn-primary mt-3" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- コントロールパネル -->
+<div class="control-panel">
+  <div class="d-flex flex-column align-items-center">
+    <small class="text-muted mb-2">サイズ調整</small>
+    <div class="d-flex align-items-center">
+      <i class="fas fa-compress-alt"></i>
+      <input type="range" class="size-slider" min="100" max="200" value="150"
+             oninput="resizeSelected(this.value)">
+      <i class="fas fa-expand-alt"></i>
+    </div>
+    <small class="text-muted mt-2">クリックで選択</small>
+  </div>
+</div>
+
+<style>
+  .collection-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    min-height: calc(100vh - 140px);
+    position: relative;
+  }
+
+  .collection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+  }
+
+  .collection-canvas {
+    width: 100%;
+    height: calc(100vh - 300px);
+    background:
+        linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px);
+    background-size: 20px 20px;
+    position: relative;
+    border: 2px dashed #ddd;
+    border-radius: 15px;
+    overflow: hidden;
+  }
+
+  .album-jacket {
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    cursor: move;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: white;
+    padding: 5px;
+    user-select: none;
+  }
+
+  .album-jacket:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    z-index: 100;
+  }
+
+  .album-jacket.dragging {
+    transform: rotate(5deg) scale(1.1);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    z-index: 1000;
+  }
+
+  .album-jacket img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 5px;
+  }
+
+  .delete-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .album-jacket:hover .delete-btn {
+    opacity: 1;
+  }
+
+  .control-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+  }
+
+  .size-slider {
+    width: 120px;
+    margin: 0 10px;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #666;
+  }
+
+  .empty-state i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.3;
+  }
+
+  .btn-gradient {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+  }
+
+  .btn-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    color: white;
+  }
+
+  .layout-presets {
+    display: flex;
+    gap: 10px;
+    margin-left: 20px;
+  }
+
+  .preset-btn {
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+  }
+
+  .preset-btn:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+  }
+</style>
+
+<script>
+  let isDragging = false;
+  let currentElement = null;
+  let startX = 0;
+  let startY = 0;
+  let selectedAlbum = null;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeDragAndDrop();
+  });
+
+  function initializeDragAndDrop() {
+    const albums = document.querySelectorAll('.album-jacket');
+    const canvas = document.getElementById('canvas');
+
+    albums.forEach(album => {
+      // マウスダウン
+      album.addEventListener('mousedown', function(e) {
+        if (e.target.classList.contains('delete-btn') || e.target.closest('.delete-btn')) {
+          return;
+        }
+
+        isDragging = true;
+        currentElement = this;
+
+        // 選択状態の管理
+        albums.forEach(a => a.style.border = 'none');
+        this.style.border = '3px solid #007bff';
+        selectedAlbum = this;
+
+        const rect = this.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
+
+        startX = e.clientX - rect.left;
+        startY = e.clientY - rect.top;
+
+        this.classList.add('dragging');
+
+        e.preventDefault();
+      });
+    });
+
+    // マウス移動
+    document.addEventListener('mousemove', function(e) {
+      if (!isDragging || !currentElement) return;
+
+      const canvasRect = canvas.getBoundingClientRect();
+      const newX = e.clientX - canvasRect.left - startX;
+      const newY = e.clientY - canvasRect.top - startY;
+
+      // キャンバス境界内に制限
+      const maxX = canvas.offsetWidth - currentElement.offsetWidth;
+      const maxY = canvas.offsetHeight - currentElement.offsetHeight;
+
+      const clampedX = Math.max(0, Math.min(newX, maxX));
+      const clampedY = Math.max(0, Math.min(newY, maxY));
+
+      currentElement.style.left = clampedX + 'px';
+      currentElement.style.top = clampedY + 'px';
+    });
+
+    // マウスアップ
+    document.addEventListener('mouseup', function() {
+      if (currentElement) {
+        currentElement.classList.remove('dragging');
+        currentElement = null;
+      }
+      isDragging = false;
+    });
+  }
+
+  function removeAlbum(btn, spotifyId) {
+    if (confirm('このアルバムをコレクションから削除しますか？')) {
+      fetch(`/favorite_albums/${spotifyId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'removed') {
+          const album = btn.closest('.album-jacket');
+          album.style.opacity = '0';
+          album.style.transform = 'scale(0)';
+          setTimeout(() => album.remove(), 300);
+          showMessage('アルバムを削除しました', 'success');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showMessage('エラーが発生しました', 'error');
+      });
+    }
+  }
+
+  function resizeSelected(size) {
+    if (selectedAlbum) {
+      selectedAlbum.style.width = size + 'px';
+      selectedAlbum.style.height = size + 'px';
+    }
+  }
+
+  function arrangeGrid() {
+    const albums = document.querySelectorAll('.album-jacket');
+    const cols = Math.ceil(Math.sqrt(albums.length));
+    const spacing = 20;
+    const albumSize = 150;
+
+    albums.forEach((album, index) => {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      const x = col * (albumSize + spacing) + spacing;
+      const y = row * (albumSize + spacing) + spacing;
+
+      animateToPosition(album, x, y);
+    });
+  }
+
+  function arrangeCircle() {
+    const albums = document.querySelectorAll('.album-jacket');
+    const canvas = document.getElementById('canvas');
+    const centerX = canvas.offsetWidth / 2 - 75;
+    const centerY = canvas.offsetHeight / 2 - 75;
+    const radius = Math.min(centerX, centerY) - 100;
+
+    albums.forEach((album, index) => {
+      const angle = (index / albums.length) * 2 * Math.PI;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+
+      animateToPosition(album, x, y);
+    });
+  }
+
+  function arrangeRandom() {
+    const albums = document.querySelectorAll('.album-jacket');
+    const canvas = document.getElementById('canvas');
+
+    albums.forEach(album => {
+      const maxX = canvas.offsetWidth - 150;
+      const maxY = canvas.offsetHeight - 150;
+      const x = Math.random() * maxX;
+      const y = Math.random() * maxY;
+
+      animateToPosition(album, x, y);
+    });
+  }
+
+  function arrangeShuffle() {
+    const albums = Array.from(document.querySelectorAll('.album-jacket'));
+    const positions = albums.map(album => ({
+      x: parseInt(album.style.left),
+      y: parseInt(album.style.top)
+    }));
+
+    // Fisher-Yates shuffle
+    for (let i = positions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [positions[i], positions[j]] = [positions[j], positions[i]];
+    }
+
+    albums.forEach((album, index) => {
+      animateToPosition(album, positions[index].x, positions[index].y);
+    });
+  }
+
+  function animateToPosition(element, x, y) {
+    element.style.transition = 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    element.style.left = x + 'px';
+    element.style.top = y + 'px';
+
+    setTimeout(() => {
+      element.style.transition = '';
+    }, 500);
+  }
+
+  function saveLayout() {
+    const albums = document.querySelectorAll('.album-jacket');
+    const layout = Array.from(albums).map(album => ({
+      id: album.dataset.id,
+      x: parseInt(album.style.left),
+      y: parseInt(album.style.top),
+      width: album.offsetWidth,
+      height: album.offsetHeight
+    }));
+
+    fetch('/favorite_albums/update_layout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
+      },
+      body: JSON.stringify({ layout: layout })
+    })
+    .then(response => response.json())
+    .then(data => {
+      showMessage('レイアウトを保存しました！', 'success');
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showMessage('保存に失敗しました', 'error');
+    });
+  }
+
+  function showMessage(message, type) {
+    const alertClass = type === 'error' ? 'alert-danger' : 'alert-success';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed"
+             style="top: 20px; right: 20px; z-index: 9999;" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+
+    setTimeout(() => {
+      const alert = document.querySelector('.alert');
+      if (alert) alert.remove();
+    }, 3000);
+  }
+</script>

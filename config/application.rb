@@ -1,10 +1,20 @@
 require_relative "boot"
-
 require "rails/all"
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
+
+if Rails.env.development? || Rails.env.test?
+  begin
+    require 'dotenv/rails-now'
+  rescue LoadError
+    # dotenv-railsがない場合は何もしない
+  end
+end
+
+require 'dotenv/rails-now' if defined?(Dotenv)
+Dotenv::Railtie.load if defined?(Dotenv)
 
 module TuneBox
   class Application < Rails::Application

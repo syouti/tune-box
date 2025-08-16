@@ -1,0 +1,156 @@
+<div class="container mt-4">
+  <h1>🎵 アルバム検索</h1>
+
+  <!-- 検索フォーム -->
+  <%= form_with url: albums_index_path, method: :get, local: true, class: "mb-4" do |form| %>
+    <div class="input-group">
+      <%= form.text_field :search,
+          value: @search_query,
+          placeholder: "アーティスト名やアルバム名で検索...",
+          class: "form-control form-control-lg" %>
+      <%= form.submit "検索", class: "btn btn-primary btn-lg" %>
+    </div>
+  <% end %>
+
+  <!-- 検索結果の統計 -->
+  <% if @albums.any? %>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3>検索結果</h3>
+      <span class="badge bg-primary fs-6">
+        全 <%= @total_albums %> 件中
+        <%= (@page - 1) * 20 + 1 %>-<%= [@page * 20, @total_albums].min %> 件目
+      </span>
+    </div>
+
+    <!-- アルバム一覧 -->
+    <div class="row">
+      <% @albums.each do |album| %>
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+          <div class="card h-100 hover-card position-relative">
+            <% if album[:image_url] %>
+              <img src="<%= album[:image_url] %>" class="card-img-top" alt="<%= album[:name] %>" style="height: 250px; object-fit: cover;">
+            <% else %>
+              <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                <i class="fas fa-music fa-3x text-muted"></i>
+              </div>
+            <% end %>
+
+            <!-- お気に入りボタン（画像の上に重ねて表示） -->
+            <div class="position-absolute top-0 end-0 p-2">
+              <button class="btn btn-outline-danger btn-sm favorite-btn"
+                      data-spotify-id="<%= album[:spotify_id] %>"
+                      data-name="<%= album[:name] %>"
+                      data-artist="<%= album[:artist] %>"
+                      data-image-url="<%= album[:image_url] %>"
+                      data-external-url="<%= album[:external_url] %>"
+                      data-release-date="<%= album[:release_date] %>"
+                      data-total-tracks="<%= album[:total_tracks] %>"
+                      style="border-radius: 50%; width: 40px; height: 40px; backdrop-filter: blur(5px); background: rgba(255,255,255,0.9);">
+                <i class="fas fa-heart"></i>
+              </button>
+            </div>
+
+            <div class="card-body d-flex flex-column">
+              <h6 class="card-title"><%= album[:name] %></h6>
+              <p class="card-text small text-muted mb-2"><%= album[:artist] %></p>
+              <p class="card-text small text-muted mb-2">
+                <i class="fas fa-calendar me-1"></i><%= album[:release_date] %>
+              </p>
+              <p class="card-text small text-muted mb-3">
+                <i class="fas fa-music me-1"></i><%= album[:total_tracks] %> 曲
+              </p>
+              <div class="mt-auto">
+                <a href="<%= album[:external_url] %>" target="_blank" class="btn btn-success btn-sm w-100">
+                  <i class="fab fa-spotify me-1"></i>Spotifyで聴く
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- ページネーション -->
+    <% if @total_pages > 1 %>
+      <nav aria-label="検索結果ページネーション" class="mt-5">
+        <ul class="pagination justify-content-center">
+          <!-- 前のページ -->
+          <% if @page > 1 %>
+            <li class="page-item">
+              <%= link_to albums_index_path(search: @search_query, page: @page - 1), class: "page-link" do %>
+                <i class="fas fa-chevron-left"></i> 前へ
+              <% end %>
+            </li>
+          <% else %>
+            <li class="page-item disabled">
+              <span class="page-link"><i class="fas fa-chevron-left"></i> 前へ</span>
+            </li>
+          <% end %>
+
+          <!-- ページ番号 -->
+          <%
+            start_page = [@page - 2, 1].max
+            end_page = [start_page + 4, @total_pages].min
+            start_page = [end_page - 4, 1].max if end_page - start_page < 4
+          %>
+
+          <% if start_page > 1 %>
+            <li class="page-item">
+              <%= link_to "1", albums_index_path(search: @search_query, page: 1), class: "page-link" %>
+            </li>
+            <% if start_page > 2 %>
+              <li class="page-item disabled"><span class="page-link">...</span></li>
+            <% end %>
+          <% end %>
+
+          <% (start_page..end_page).each do |page_num| %>
+            <li class="page-item <%= 'active' if page_num == @page %>">
+              <%= link_to page_num, albums_index_path(search: @search_query, page: page_num), class: "page-link" %>
+            </li>
+          <% end %>
+
+          <% if end_page < @total_pages %>
+            <% if end_page < @total_pages - 1 %>
+              <li class="page-item disabled"><span class="page-link">...</span></li>
+            <% end %>
+            <li class="page-item">
+              <%= link_to @total_pages, albums_index_path(search: @search_query, page: @total_pages), class: "page-link" %>
+            </li>
+          <% end %>
+
+          <!-- 次のページ -->
+          <% if @page < @total_pages %>
+            <li class="page-item">
+              <%= link_to albums_index_path(search: @search_query, page: @page + 1), class: "page-link" do %>
+                次へ <i class="fas fa-chevron-right"></i>
+              <% end %>
+            </li>
+          <% else %>
+            <li class="page-item disabled">
+              <span class="page-link">次へ <i class="fas fa-chevron-right"></i></span>
+            </li>
+          <% end %>
+        </ul>
+      </nav>
+
+      <!-- ページ情報 -->
+      <div class="text-center text-muted mt-3">
+        <small>
+          ページ <%= @page %> / <%= @total_pages %>
+          (全 <%= @total_albums %> 件のアルバム)
+        </small>
+      </div>
+    <% end %>
+
+  <% elsif @search_query.present? %>
+    <div class="alert alert-warning">
+      <i class="fas fa-search me-2"></i>
+      「<%= @search_query %>」の検索結果が見つかりませんでした。
+    </div>
+  <% else %>
+    <div class="text-center text-muted mt-5">
+      <i class="fas fa-search fa-3x mb-3"></i>
+      <p>アーティスト名やアルバム名を入力して検索してください</p>
+    </div>
+  <% end %>
+</div>

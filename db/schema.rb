@@ -10,7 +10,50 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_27_201318) do
+ActiveRecord::Schema[7.2].define(version: 2025_08_16_102731) do
+  create_table "albums", force: :cascade do |t|
+    t.string "spotify_id"
+    t.string "name"
+    t.string "artist"
+    t.text "image_url"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "collection_items", force: :cascade do |t|
+    t.integer "collection_id", null: false
+    t.integer "album_id", null: false
+    t.integer "position"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["album_id"], name: "index_collection_items_on_album_id"
+    t.index ["collection_id"], name: "index_collection_items_on_collection_id"
+  end
+
+  create_table "collections", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "name"
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_collections_on_user_id"
+  end
+
+  create_table "favorite_albums", force: :cascade do |t|
+    t.integer "user_id"
+    t.string "spotify_id"
+    t.string "name"
+    t.string "artist"
+    t.string "image_url"
+    t.string "external_url"
+    t.string "release_date"
+    t.integer "total_tracks"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "position_x"
+    t.integer "position_y"
+  end
+
   create_table "favorites", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "live_event_id", null: false
@@ -43,6 +86,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_27_201318) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "collection_items", "albums"
+  add_foreign_key "collection_items", "collections"
+  add_foreign_key "collections", "users"
   add_foreign_key "favorites", "live_events"
   add_foreign_key "favorites", "users"
 end

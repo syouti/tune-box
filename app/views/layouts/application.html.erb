@@ -122,22 +122,28 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav me-auto">
-            <li class="nav-item">
-              <%= link_to "ライブ一覧", root_path, class: "nav-link #{'active' if current_page?(root_path)}" %>
-            </li>
-            <li class="nav-item">
-              <%= link_to "新規投稿", new_live_event_path, class: "nav-link #{'active' if current_page?(new_live_event_path)}" %>
-            </li>
-            <% if defined?(current_user) && current_user %>
-              <li class="nav-item">
-                <%= link_to user_path(current_user), class: "nav-link #{'active' if current_page?(user_path(current_user))}" do %>
-                  <i class="fas fa-heart me-1"></i>お気に入り
-                  <span class="notification-badge">3</span>
-                <% end %>
-              </li>
-            <% end %>
-          </ul>
+
+      <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+           <%= link_to "ライブ一覧", root_path, class: "nav-link #{'active' if current_page?(root_path)}" %>
+        </li>
+        <li class="nav-item">
+          <%= link_to "新規投稿", new_live_event_path, class: "nav-link #{'active' if current_page?(new_live_event_path)}" %>
+        </li>
+
+        <li class="nav-item">
+         <%= link_to favorite_albums_path, class: "nav-link #{'active' if current_page?(favorite_albums_path)}" do %>
+          <i class="fas fa-heart me-1"></i>コレクション
+         <% end %>
+        </li>
+        
+        <% if defined?(current_user) && current_user %>
+          <li class="nav-item">
+            <%= link_to user_path(current_user), class: "nav-link #{'active' if current_page?(user_path(current_user))}" do %>
+              <i class="fas fa-heart me-1"></i>お気に入り <% end %>
+          </li>
+        <% end %>
+     </ul>
 
           <ul class="navbar-nav">
             <% if defined?(current_user) && current_user %>
@@ -288,6 +294,128 @@
           }
         });
       }, 5000);
+
+      // お気に入り機能のJavaScript
+      document.addEventListener('DOMContentLoaded', function() {
+        // お気に入りボタンのクリック処理
+        document.addEventListener('click', function(e) {
+          if (e.target.closest('.favorite-btn')) {
+            e.preventDefault();
+            const btn = e.target.closest('.favorite-btn');
+            toggleFavorite(btn);
+          }
+
+          if (e.target.closest('.remove-from-collection')) {
+            e.preventDefault();
+            const btn = e.target.closest('.remove-from-collection');
+            removeFromCollection(btn);
+          }
+        });
+
+        function toggleFavorite(btn) {
+          const data = {
+            favorite_album: {
+              spotify_id: btn.dataset.spotifyId,
+              name: btn.dataset.name,
+              artist: btn.dataset.artist,
+              image_url: btn.dataset.imageUrl,
+              external_url: btn.dataset.externalUrl,
+              release_date: btn.dataset.releaseDate,
+              total_tracks: btn.dataset.totalTracks
+            }
+          };
+
+          fetch('/favorite_albums/toggle', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify(data)
+          })
+          .then(response => response.json())
+          .then(data => {
+            showMessage(data.message, data.status);
+
+            if (data.status === 'added') {
+              btn.classList.remove('btn-outline-danger');
+              btn.classList.add('btn-danger');
+            } else if (data.status === 'removed') {
+              btn.classList.remove('btn-danger');
+              btn.classList.add('btn-outline-danger');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            showMessage('エラーが発生しました', 'error');
+          });
+        }
+
+        function removeFromCollection(btn) {
+          if (confirm('このアルバムをコレクションから削除しますか？')) {
+            fetch(`/favorite_albums/${btn.dataset.spotifyId}`, {
+              method: 'DELETE',
+              headers: {
+                'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              showMessage(data.message, data.status);
+
+              if (data.status === 'removed') {
+                const card = btn.closest('.collection-item');
+                card.style.opacity = '0';
+                setTimeout(() => card.remove(), 300);
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              showMessage('エラーが発生しました', 'error');
+            });
+          }
+        }
+
+        function showMessage(message, type) {
+          const alertClass = type === 'error' ? 'alert-danger' : 'alert-success';
+          const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show position-fixed"
+                 style="top: 20px; right: 20px; z-index: 9999;" role="alert">
+              ${message}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          `;
+
+          document.body.insertAdjacentHTML('beforeend', alertHtml);
+
+          setTimeout(() => {
+            const alert = document.querySelector('.alert');
+            if (alert) alert.remove();
+          }, 3000);
+        }
+
+        // ページ読み込み時にお気に入り状態をチェック
+        checkFavoriteStatus();
+
+        function checkFavoriteStatus() {
+          const favoriteButtons = document.querySelectorAll('.favorite-btn');
+
+          if (favoriteButtons.length > 0) {
+            fetch('/favorite_albums.json')
+              .then(response => response.json())
+              .then(favorites => {
+                favoriteButtons.forEach(btn => {
+                  const isFavorite = favorites.some(fav => fav.spotify_id === btn.dataset.spotifyId);
+                  if (isFavorite) {
+                    btn.classList.remove('btn-outline-danger');
+                    btn.classList.add('btn-danger');
+                  }
+                });
+              })
+              .catch(error => console.error('Error checking favorites:', error));
+          }
+        }
+      });
     </script>
   </body>
 </html>
