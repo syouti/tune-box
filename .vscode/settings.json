@@ -1,0 +1,12 @@
+{
+  "ruby.interpreter.commandPath": "ruby",
+  "solargraph.commandPath": "bundle exec solargraph",
+  "solargraph.useBundler": true,
+  "files.associations": {
+    "Rakefile": "ruby",
+    "Gemfile": "ruby",
+    "*.rb": "ruby",
+    "*.erb": "erb"
+  },
+  "ruby.codeCompletion": "rcodetools"
+}
