@@ -5,7 +5,7 @@ Rails.application.routes.draw do
   get "albums/index"
   get "albums/search"
   # ルートページをライブ一覧に設定
-  root 'live_events#index'
+  root 'favorite_albums#index'
 
   # ライブイベント関連のルート
   resources :live_events do

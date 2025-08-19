@@ -62,3 +62,4 @@ group :production do
   # Use PostgreSQL for production
   gem "pg", "~> 1.5"
 end
+gem "dotenv-rails", groups: [:development, :test]

@@ -114,8 +114,7 @@
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
       <div class="container">
         <%= link_to root_path, class: "navbar-brand text-primary" do %>
-          <i class="fas fa-music me-2"></i>TuneBox
-        <% end %>
+          <i class="fas fa-music me-2"#アイコン></i>TuneBox<% end %>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
@@ -123,19 +122,16 @@
 
         <div class="collapse navbar-collapse" id="navbarNav">
 
-      <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-           <%= link_to "ライブ一覧", root_path, class: "nav-link #{'active' if current_page?(root_path)}" %>
-        </li>
-        <li class="nav-item">
-          <%= link_to "新規投稿", new_live_event_path, class: "nav-link #{'active' if current_page?(new_live_event_path)}" %>
-        </li>
 
-        <li class="nav-item">
+      <ul class="navbar-nav me-auto">
+       <li class="nav-item">
          <%= link_to favorite_albums_path, class: "nav-link #{'active' if current_page?(favorite_albums_path)}" do %>
-          <i class="fas fa-heart me-1"></i>コレクション
-         <% end %>
+        <i class="fas fa-heart me-1"></i>名盤リストを作る<% end %>
+        
+        <li class="nav-item">
+         <%= link_to "ライブ一覧", root_path, class: "nav-link #{'active' if current_page?(root_path)}" %>
         </li>
+       </li>
         
         <% if defined?(current_user) && current_user %>
           <li class="nav-item">

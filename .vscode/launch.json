@@ -3,13 +3,30 @@
   "configurations": [
     {
       "name": "Rails Server",
-      "type": "Ruby",
+      "type": "rdbg",
       "request": "launch",
-      "program": "${workspaceRoot}/bin/rails",
+      "script": "${workspaceRoot}/bin/rails",
       "args": ["server"],
+      "askParameters": false,
       "env": {
         "RAILS_ENV": "development"
       },
+      "cwd": "${workspaceRoot}"
+    },
+    {
+      "name": "Rails Console",
+      "type": "rdbg", 
+      "request": "launch",
+      "script": "${workspaceRoot}/bin/rails",
+      "args": ["console"],
+      "askParameters": false,
+      "cwd": "${workspaceRoot}"
+    },
+    {
+      "name": "Rails Server (Simple)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "rails server",
       "cwd": "${workspaceRoot}"
     }
   ]

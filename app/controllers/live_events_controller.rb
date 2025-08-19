@@ -1,5 +1,6 @@
 class LiveEventsController < ApplicationController
   def index
+    @search_query = params[:search]
     @live_events = LiveEvent.all.order(date: :asc)
 
     # 検索機能
@@ -10,6 +11,7 @@ class LiveEventsController < ApplicationController
         search_term, search_term, search_term
       )
     end
+
 
     # 都道府県での絞り込み
     if params[:prefecture].present?
@@ -24,7 +26,20 @@ class LiveEventsController < ApplicationController
     if params[:date_to].present?
       @live_events = @live_events.where("date <= ?", params[:date_to])
     end
+    if params[:search].present?
+      begin
+        lastfm_service = LastfmApiService.new
+        @api_events = lastfm_service.search_artist_events(params[:search])
+      rescue StandardError => e
+        puts "❌ Last.fm API Error: #{e.message}"
+        @api_events = []
+      end
+    else
+      @api_events = []
+    end
   end
+
+
 
   def show
     @live_event = LiveEvent.find(params[:id])

@@ -100,9 +100,6 @@
   }
 </style>
 
-<div class="alert alert-success">
-  🎉 複数のアニメーションが追加されました！各要素にマウスを載せてみてください。
-</div>
 
 <!-- 検索セクション -->
 <div class="card shadow-sm mb-4 search-card">
@@ -156,6 +153,67 @@
     <% end %>
   </div>
 </div>
+
+<!-- 外部API検索結果 -->
+<% if @api_events&.any? %>
+  <div class="mb-5">
+    <div class="row align-items-center mb-3">
+      <div class="col">
+        <h3 class="text-primary">
+          <i class="fas fa-star me-2"></i>近日開催予定のライブ
+        </h3>
+        <p class="text-muted">「<%= params[:search] %>」の検索結果: <%= @api_events.count %>件</p>
+      </div>
+    </div>
+    
+    <div class="row">
+      <% @api_events.each do |event| %>
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card h-100 hover-card shadow-sm">
+            <div class="card-header bg-gradient text-white" style="background: linear-gradient(45deg, #667eea, #764ba2);">
+              <h6 class="mb-0">
+                <i class="fas fa-microphone me-2"></i>
+                <%= event[:artist] %>
+              </h6>
+            </div>
+            <div class="card-body">
+              <h6 class="card-title">
+                <i class="fas fa-map-marker-alt me-2 text-primary"></i>
+                <%= event[:venue_name] %>
+              </h6>
+              <p class="card-text">
+                <small class="text-muted">
+                  <i class="fas fa-location-dot me-1"></i>
+                  <%= event[:venue_city] %>, <%= event[:venue_country] %>
+                </small>
+              </p>
+              <p class="card-text">
+                <i class="fas fa-calendar me-2 text-primary"></i>
+                <%= Time.parse(event[:date]).strftime("%Y年%m月%d日 %H:%M") rescue event[:date] %>
+              </p>
+              <% if event[:description].present? %>
+                <p class="card-text">
+                  <small class="text-muted"><%= event[:description] %></small>
+                </p>
+              <% end %>
+            </div>
+            <div class="card-footer bg-transparent">
+              <a href="<%= event[:ticket_url] %>" target="_blank" class="btn btn-success btn-sm w-100">
+                <i class="fas fa-ticket-alt me-1"></i>チケット情報
+              </a>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% elsif params[:search].present? && @api_events&.empty? %>
+  <div class="alert alert-info mb-4">
+    <i class="fas fa-info-circle me-2"></i>
+    「<%= params[:search] %>」の外部ライブ情報が見つかりませんでした。
+  </div>
+<% end %>
+
 
 <!-- ライブ一覧 -->
 <div class="row">
@@ -243,14 +301,6 @@
         </div>
       </div>
     <% end %>
-  <% else %>
-    <div class="col-12">
-      <div class="text-center py-5">
-        <i class="fas fa-music text-muted mb-3" style="font-size: 4rem;"></i>
-        <h3 class="text-muted">ライブ情報が見つかりませんでした</h3>
-        <p class="text-muted mb-4">検索条件を変更するか、新しいライブ情報を追加してみてください。</p>
-        <%= link_to "ライブを追加する", new_live_event_path, class: "btn btn-gradient btn-lg" %>
-      </div>
-    </div>
+   <% else %>
   <% end %>
 </div>
