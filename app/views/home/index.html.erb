@@ -1,0 +1,197 @@
+<!-- ヒーローセクション -->
+<div class="hero-section text-center py-5 mb-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; color: white; position: relative; overflow: hidden;">
+  <!-- 背景アニメーション -->
+  <div class="floating-particles"></div>
+  
+  <div style="position: relative; z-index: 1;">
+    <h1 class="display-4 fw-bold mb-3" style="background: linear-gradient(45deg, #fff, #f0f0f0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+      <i class="fas fa-record-vinyl me-3"></i>TuneBox
+    </h1>
+    <p class="lead mb-4" style="opacity: 0.9;">
+      あなただけの名盤リストを作成しよう
+    </p>
+    <p class="mb-0" style="opacity: 0.8;">
+      お気に入りの音楽を発見・整理・共有
+    </p>
+  </div>
+</div>
+
+
+
+<!-- メイン機能カード -->
+<div class="row g-4 mb-5 justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card hover-card border-0 shadow-lg h-100" style="transition: all 0.3s ease;">
+      <div class="card-body p-5 text-center">
+        <h3 class="card-title fw-bold mb-3">名盤リストを作る</h3>
+        <p class="card-text text-muted mb-4">
+          お気に入りのアルバムを検索して、あなただけの名盤リストを作成。ドラッグ&ドロップで自由に並び替えできます。
+        </p>
+        
+        <% if user_signed_in? %>
+          <!-- ログイン済みの場合：直接リストページへ -->
+          <%= link_to favorite_albums_path, class: "btn btn-gradient btn-lg px-4" do %>
+            <i class="fas fa-plus me-2"></i>リストを作る
+          <% end %>
+        <% else %>
+          <!-- 未ログインの場合：モーダルを表示 -->
+          <button class="btn btn-gradient btn-lg px-4" data-bs-toggle="modal" data-bs-target="#loginOptionsModal">
+            <i class="fas fa-plus me-2"></i>リストを作る
+          </button>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ログイン選択肢モーダル -->
+<div class="modal fade" id="loginOptionsModal" tabindex="-1" aria-labelledby="loginOptionsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+      <div class="modal-header" style="border-bottom: 1px solid #eee; padding: 1.5rem;">
+        <h5 class="modal-title fw-bold" id="loginOptionsModalLabel">
+          <i class="fas fa-user-circle me-2" style="color: #667eea;"></i>はじめましょう
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="padding: 2rem;">
+        <p class="text-muted mb-4">名盤リストを作成するには、以下からお選びください：</p>
+        
+        <div class="d-grid gap-3">
+          <!-- 新規登録 -->
+          <%= link_to "/signup", class: "btn btn-outline-primary btn-lg option-btn text-decoration-none", style: "padding: 1rem; border-radius: 10px; transition: all 0.3s ease; border: 2px solid #667eea;" do %>
+            <div class="d-flex align-items-center">
+              <i class="fas fa-user-plus fa-2x me-3" style="color: #667eea;"></i>
+              <div class="text-start">
+                <div class="fw-bold" style="color: #667eea;">新規登録する</div>
+                <small class="text-muted">アカウントを作成して始める</small>
+              </div>
+            </div>
+          <% end %>
+          
+          <!-- ログイン -->
+          <%= link_to "/login", class: "btn btn-outline-success btn-lg option-btn text-decoration-none", style: "padding: 1rem; border-radius: 10px; transition: all 0.3s ease; border: 2px solid #28a745;" do %>
+            <div class="d-flex align-items-center">
+              <i class="fas fa-sign-in-alt fa-2x me-3" style="color: #28a745;"></i>
+              <div class="text-start">
+                <div class="fw-bold" style="color: #28a745;">ログインする</div>
+                <small class="text-muted">既存のアカウントでログイン</small>
+              </div>
+            </div>
+          <% end %>
+          
+          <!-- ゲストログイン -->
+          <%= link_to guest_albums_path, class: "btn btn-outline-info btn-lg option-btn text-decoration-none", style: "padding: 1rem; border-radius: 10px; transition: all 0.3s ease; border: 2px solid #17a2b8;" do %>
+            <div class="d-flex align-items-center">
+              <i class="fas fa-eye fa-2x me-3" style="color: #17a2b8;"></i>
+              <div class="text-start">
+                <div class="fw-bold" style="color: #17a2b8;">ゲストユーザーとしてログイン</div>
+                <small class="text-muted">登録せずにお試し利用</small>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- モーダル用追加CSS -->
+<style>
+.option-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.btn-outline-primary:hover {
+  background-color: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.btn-outline-primary:hover .fas {
+  color: white !important;
+}
+
+.btn-outline-primary:hover small {
+  color: rgba(255,255,255,0.8) !important;
+}
+
+.btn-outline-success:hover .fas {
+  color: white !important;
+}
+
+.btn-outline-success:hover small {
+  color: rgba(255,255,255,0.8) !important;
+}
+
+.btn-outline-info:hover .fas {
+  color: white !important;
+}
+
+.btn-outline-info:hover small {
+  color: rgba(255,255,255,0.8) !important;
+}
+</style>
+
+<!-- アニメーション用CSS -->
+<style>
+.floating-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.1), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.1), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.1), transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.1), transparent),
+    radial-gradient(2px 2px at 160px 30px, rgba(255,255,255,0.1), transparent);
+  background-repeat: repeat;
+  background-size: 200px 100px;
+  animation: float 20s infinite linear;
+}
+
+@keyframes float {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(-100px) rotate(360deg); }
+}
+
+.hover-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
+}
+
+.btn-gradient {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border: none;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+  color: white;
+}
+
+.card {
+  transition: all 0.3s ease;
+}
+
+.hero-section {
+  animation: fadeInUp 1s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>

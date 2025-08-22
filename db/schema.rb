@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_08_16_102731) do
+ActiveRecord::Schema[7.2].define(version: 2025_08_20_172308) do
   create_table "albums", force: :cascade do |t|
     t.string "spotify_id"
     t.string "name"
@@ -52,6 +52,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_16_102731) do
     t.datetime "updated_at", null: false
     t.integer "position_x"
     t.integer "position_y"
+    t.integer "position", default: 1
+    t.index ["position"], name: "index_favorite_albums_on_position"
   end
 
   create_table "favorites", force: :cascade do |t|

@@ -3,6 +3,7 @@ class AlbumsController < ApplicationController
     @search_query = params[:search]
     @page = params[:page].to_i
     @page = 1 if @page < 1
+    @favorite_albums = user_signed_in? ? current_user.favorite_albums : []
 
     per_page = 20
     offset = (@page - 1) * per_page

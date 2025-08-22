@@ -1,28 +1,46 @@
 Rails.application.routes.draw do
-  get "favorite_albums/index"
-  get "favorite_albums/create"
-  get "favorite_albums/destroy"
+  get "guest_albums/index"
+  root 'home#index'
+  get "home/index"
   get "albums/index"
   get "albums/search"
-  # ルートページをライブ一覧に設定
-  root 'favorite_albums#index'
+  get 'list_builder', to: 'list_builder#index'
+  get 'albums', to: 'list_builder#index'
 
-  # ライブイベント関連のルート
+  # ライブイベント関連
   resources :live_events do
     member do
-      post 'favorite'     # お気に入りに追加
-      delete 'unfavorite' # お気に入りから削除
+      post 'favorite'
+      delete 'unfavorite'
     end
   end
 
-  resources :favorite_albums, only: [:index, :create, :destroy] do
+  # お気に入りアルバム関連（1つにまとめて、member と collection を正しく配置）
+  resources :favorite_albums do
+    member do
+      get :share
+      post :generate_share_image
+    end
     collection do
       post :toggle
       post :update_layout
+      patch :update_positions  # この行を追加
+      post :save_to_account
+      post :share
+      delete :bulk_destroy
     end
   end
 
-  # ユーザー認証関連のルート
+  # ゲストアルバム関連
+  resources :guest_albums, only: [:index] do
+    collection do
+      post :toggle
+      patch :update_positions
+      post :save_to_account
+    end
+  end
+
+  # ユーザー認証関連
   get 'signup', to: 'users#new'
   post 'signup', to: 'users#create'
   resources :users, only: [:show]
@@ -30,12 +48,8 @@ Rails.application.routes.draw do
   get 'login', to: 'sessions#new'
   post 'login', to: 'sessions#create'
   delete 'logout', to: 'sessions#destroy'
-  get 'logout', to: 'sessions#destroy'  # GETでもログアウトできるように追加
+  get 'logout', to: 'sessions#destroy'
 
-  resources :favorite_albums, only: [:index, :create, :destroy]
-
-  post 'favorite_albums/toggle', to: 'favorite_albums#toggle'
-
-  # Health check endpoint
+  # Health check
   get "up" => "rails/health#show", as: :rails_health_check
 end

@@ -12,6 +12,12 @@
     </div>
   <% end %>
 
+  <!-- お気に入り数表示 -->
+  <div class="alert alert-info d-flex justify-content-between align-items-center" id="favorite-status">
+    <span>現在のお気に入り: <span id="favorite-counter">読み込み中...</span> / 25</span>
+    <%= link_to "コレクションを見る", favorite_albums_path, class: "btn btn-sm btn-outline-primary" %>
+  </div>
+
   <!-- 検索結果の統計 -->
   <% if @albums.any? %>
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -36,18 +42,18 @@
             <% end %>
 
             <!-- お気に入りボタン（画像の上に重ねて表示） -->
-            <div class="position-absolute top-0 end-0 p-2">
-              <button class="btn btn-outline-danger btn-sm favorite-btn"
-                      data-spotify-id="<%= album[:spotify_id] %>"
-                      data-name="<%= album[:name] %>"
-                      data-artist="<%= album[:artist] %>"
-                      data-image-url="<%= album[:image_url] %>"
-                      data-external-url="<%= album[:external_url] %>"
-                      data-release-date="<%= album[:release_date] %>"
-                      data-total-tracks="<%= album[:total_tracks] %>"
-                      style="border-radius: 50%; width: 40px; height: 40px; backdrop-filter: blur(5px); background: rgba(255,255,255,0.9);">
-                <i class="fas fa-heart"></i>
-              </button>
+            <div class="position-absolute top-0 end-0 p-2" style="z-index: 10;">
+             <button class="btn btn-outline-success btn-sm add-btn"
+               data-spotify-id="<%= album[:spotify_id] %>"
+               data-name="<%= album[:name] %>"
+               data-artist="<%= album[:artist] %>"
+               data-image-url="<%= album[:image_url] %>"
+               data-external-url="<%= album[:external_url] %>"
+               data-release-date="<%= album[:release_date] %>"
+               data-total-tracks="<%= album[:total_tracks] %>"
+               style="border-radius: 8px; width: 40px; height: 40px; backdrop-filter: blur(5px); background: rgba(255,255,255,0.9); position: relative; z-index: 11;">
+              <i class="fas fa-plus"></i>
+             </button>
             </div>
 
             <div class="card-body d-flex flex-column">
@@ -154,3 +160,212 @@
     </div>
   <% end %>
 </div>
+
+<script>
+let clickHandlerAttached = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded'); // デバッグ用
+    
+    // ページ読み込み時に現在のお気に入り数を取得
+    fetchCurrentFavoriteCount();
+    
+    if (clickHandlerAttached) {
+        console.log('Click handler already attached, skipping');
+        return;
+    }
+    
+    // add-btnクラスのボタンにクリックイベントを追加
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.add-btn')) {
+            e.preventDefault(); // デフォルトの動作を停止
+            e.stopPropagation(); // イベントの伝播を停止
+            
+            const btn = e.target.closest('.add-btn');
+            console.log('Button clicked:', btn); // デバッグ用
+            console.log('Button disabled:', btn.disabled); // デバッグ用
+            
+            if (btn.disabled) {
+                console.log('Button is disabled, ignoring click');
+                return;
+            }
+            
+            handleAddButtonClick(btn);
+        }
+    });
+    
+    clickHandlerAttached = true;
+    console.log('Click handler attached successfully');
+});
+
+function handleAddButtonClick(btn) {
+    console.log('Handling button click for:', btn.dataset.name);
+    
+    // 既に追加済みかチェック（ボタンの見た目で判断）
+    const isAdded = btn.classList.contains('added');
+    
+    if (!isAdded) {
+        // 追加前に上限チェック
+        const currentCount = getCurrentFavoriteCount();
+        if (currentCount >= 25) {
+            console.log('Limit reached:', currentCount);
+            showMessage('お気に入りは最大25個までです', 'error');
+            return;
+        }
+    }
+    
+    // ボタンからデータを取得
+    const albumData = {
+        spotify_id: btn.dataset.spotifyId,
+        name: btn.dataset.name,
+        artist: btn.dataset.artist,
+        image_url: btn.dataset.imageUrl,
+        external_url: btn.dataset.externalUrl,
+        release_date: btn.dataset.releaseDate,
+        total_tracks: btn.dataset.totalTracks
+    };
+    
+    console.log('Album data:', albumData); // デバッグ用
+    
+    // ボタンを一時的に無効化
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    // サーバーに送信
+    fetch('/favorite_albums/toggle', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            favorite_album: albumData
+        })
+    })
+    .then(response => {
+        console.log('Response status:', response.status); // デバッグ用
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data); // デバッグ用
+        
+        // ボタンを有効化
+        btn.disabled = false;
+        
+        if (data.status === 'added') {
+            updateButtonState(btn, true);
+            console.log('Album added successfully');
+            updateFavoriteCount(data.current_count || getCurrentFavoriteCount() + 1);
+        } else if (data.status === 'removed') {
+            updateButtonState(btn, false);
+            console.log('Album removed successfully');
+            updateFavoriteCount(data.current_count || getCurrentFavoriteCount() - 1);
+        } else if (data.status === 'error') {
+            updateButtonState(btn, false);
+            console.log('Server error:', data.message);
+            showMessage(data.message || 'エラーが発生しました', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        btn.disabled = false;
+        updateButtonState(btn, false);
+        showMessage('通信エラーが発生しました', 'error');
+    });
+}
+
+let currentFavoriteCount = 0; // グローバル変数で管理
+
+// お気に入り数を管理する関数
+function getCurrentFavoriteCount() {
+    return currentFavoriteCount;
+}
+
+function updateFavoriteCount(count) {
+    currentFavoriteCount = count;
+    const counter = document.getElementById('favorite-counter');
+    if (counter) {
+        counter.textContent = count;
+    } else {
+        console.log('favorite-counter element not found, count stored in memory:', count);
+    }
+    checkFavoriteLimit();
+}
+
+function checkFavoriteLimit() {
+    const count = getCurrentFavoriteCount();
+    const addButtons = document.querySelectorAll('.add-btn');
+    
+    addButtons.forEach(btn => {
+        const isAdded = btn.classList.contains('added');
+        if (!isAdded && count >= 25) {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.title = 'お気に入りは最大25個までです';
+        } else if (!isAdded) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.title = '';
+        }
+    });
+}
+
+function updateButtonState(btn, isAdded) {
+    if (isAdded) {
+        btn.style.background = '#28a745';
+        btn.style.borderColor = '#28a745';
+        btn.style.color = 'white';
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        btn.classList.add('added');
+    } else {
+        btn.style.background = 'rgba(255,255,255,0.9)';
+        btn.style.borderColor = '#28a745';
+        btn.style.color = '#28a745';
+        btn.innerHTML = '<i class="fas fa-plus"></i>';
+        btn.classList.remove('added');
+    }
+}
+
+// 現在のお気に入り数を取得する関数
+function fetchCurrentFavoriteCount() {
+    fetch('/favorite_albums.json')
+        .then(response => response.json())
+        .then(data => {
+            const count = data.length || 0;
+            console.log('Fetched favorite count:', count);
+            updateFavoriteCount(count);
+        })
+        .catch(error => {
+            console.log('お気に入り数の取得に失敗しました:', error);
+            // エラーの場合は0で初期化
+            updateFavoriteCount(0);
+        });
+}
+
+// メッセージ表示関数
+function showMessage(message, type) {
+    // 既存のアラートを削除
+    const existingAlerts = document.querySelectorAll('.custom-alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    const alertClass = type === 'error' ? 'alert-danger' : 
+                      type === 'info' ? 'alert-info' : 'alert-success';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed custom-alert"
+             style="top: 20px; right: 20px; z-index: 1050; max-width: 300px; pointer-events: none;" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" style="pointer-events: auto;"></button>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+
+    setTimeout(() => {
+        const alert = document.querySelector('.custom-alert');
+        if (alert) alert.remove();
+    }, 3000);
+}
+</script>

@@ -1,8 +1,10 @@
 class User < ApplicationRecord
-  has_many :favorites, dependent: :destroy
-  has_many :favorited_live_events, through: :favorites, source: :live_event
+  has_secure_password
 
-  def favorited?(live_event)
-    favorites.exists?(live_event: live_event)
-  end
+  # アソシエーションを追加
+  has_many :favorite_albums, dependent: :destroy
+  has_many :albums, through: :favorite_albums
+
+  validates :email, presence: true, uniqueness: true
+  validates :name, presence: true
 end

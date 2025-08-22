@@ -1,46 +1,54 @@
 class FavoritesController < ApplicationController
   before_action :require_login
-  before_action :set_live_event
 
-  # お気に入りに追加
-  def create
-    @favorite = current_user.favorites.build(live_event: @live_event)
+  # 検索ページ用：お気に入りの追加/削除のみ
+  def toggle
+    current_count = current_user.favorite_albums.count
 
-    if @favorite.save
-      respond_to do |format|
-        format.html { redirect_to @live_event, notice: 'お気に入りに追加しました' }
-        format.json { render json: { status: 'success', favorited: true } }
+    if params[:favorite_album]
+      spotify_id = params[:favorite_album][:spotify_id]
+      existing_album = current_user.favorite_albums.find_by(spotify_id: spotify_id)
+
+      if existing_album
+        existing_album.destroy
+        render json: {
+          status: 'removed',
+          current_count: current_user.favorite_albums.count
+        }
+      else
+        if current_count >= 25
+          render json: {
+            status: 'error',
+            message: 'お気に入りは最大25個までです'
+          }
+          return
+        end
+
+        favorite_album = current_user.favorite_albums.build(params[:favorite_album].permit(
+          :spotify_id, :name, :artist, :image_url, :external_url, :release_date, :total_tracks
+        ))
+
+        if favorite_album.save
+          render json: {
+            status: 'added',
+            current_count: current_user.favorite_albums.count
+          }
+        else
+          render json: {
+            status: 'error',
+            message: '保存に失敗しました'
+          }
+        end
       end
     else
-      respond_to do |format|
-        format.html { redirect_to @live_event, alert: 'お気に入りに追加できませんでした' }
-        format.json { render json: { status: 'error' } }
-      end
-    end
-  end
-
-  # お気に入りから削除
-  def destroy
-    @favorite = current_user.favorites.find_by(live_event: @live_event)
-
-    if @favorite&.destroy
-      respond_to do |format|
-        format.html { redirect_to @live_event, notice: 'お気に入りから削除しました' }
-        format.json { render json: { status: 'success', favorited: false } }
-      end
-    else
-      respond_to do |format|
-        format.html { redirect_to @live_event, alert: 'お気に入りから削除できませんでした' }
-        format.json { render json: { status: 'error' } }
-      end
+      render json: {
+        status: 'error',
+        message: 'データが不正です'
+      }
     end
   end
 
   private
-
-  def set_live_event
-    @live_event = LiveEvent.find(params[:id])
-  end
 
   def require_login
     unless current_user

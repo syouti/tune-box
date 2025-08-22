@@ -1,0 +1,222 @@
+<%# お気に入りアルバム一覧ページ（ゲスト対応） %>
+
+<div class="container-fluid px-0">
+  <!-- ヘッダー部分 -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+      <i class="fas fa-heart text-danger me-2"></i>
+      <% if @is_guest %>
+        あなたの名盤リスト <span class="badge bg-warning text-dark">体験版</span>
+      <% else %>
+        あなたの名盤リスト
+      <% end %>
+    </h2>
+    
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary fs-6"><%= @favorite_albums.count %> / <%= @is_guest ? '∞' : '20' %> 枚</span>
+      
+      <% if @is_guest %>
+        <%= link_to albums_path, class: "btn btn-outline-primary" do %>
+          <i class="fas fa-plus me-1"></i>追加
+        <% end %>
+        <button class="btn btn-warning" onclick="saveToAccount()">
+          <i class="fas fa-save me-1"></i>アカウントに保存
+        </button>
+      <% else %>
+        <%= link_to albums_path, class: "btn btn-outline-primary" do %>
+          <i class="fas fa-plus me-1"></i>追加
+        <% end %>
+        <button class="btn btn-gradient" onclick="saveLayout()">
+          <i class="fas fa-save me-1"></i>保存
+        </button>
+        <div class="dropdown">
+          <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-share me-1"></i>共有
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="shareToTwitter()">
+              <i class="fab fa-twitter me-2"></i>Xに投稿
+            </a></li>
+            <li><a class="dropdown-item" href="#" onclick="shareToInstagram()">
+              <i class="fab fa-instagram me-2"></i>Instagram
+            </a></li>
+            <li><a class="dropdown-item" href="#" onclick="shareToThreads()">
+              <i class="fab fa-threads me-2"></i>Threads
+            </a></li>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- ゲスト向けの案内 -->
+  <% if @is_guest && @favorite_albums.empty? %>
+    <div class="alert alert-info border-0 shadow-sm">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-info-circle me-3" style="font-size: 1.5rem;"></i>
+        <div>
+          <h6 class="mb-1">🎵 まずは気軽に試してみよう！</h6>
+          <p class="mb-0 small">
+            ログイン不要で名盤リストを作成できます。気に入ったらアカウントに保存しましょう。
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- アルバムリスト表示 -->
+  <% if @favorite_albums.empty? %>
+    <div class="text-center py-5">
+      <div class="mb-4">
+        <i class="fas fa-heart-broken text-muted" style="font-size: 4rem;"></i>
+      </div>
+      <h4 class="text-muted mb-3">まだアルバムが追加されていません</h4>
+      <p class="text-muted mb-4">
+        お気に入りのアルバムを検索して、あなただけの名盤リストを作成しましょう！
+      </p>
+      <%= link_to albums_path, class: "btn btn-gradient btn-lg" do %>
+        <i class="fas fa-search me-2"></i>アルバムを検索する
+      <% end %>
+    </div>
+  <% else %>
+    <!-- アルバムグリッド -->
+    <div id="favorite-albums-grid" class="row g-3">
+      <% if @is_guest %>
+        <% @favorite_albums.each_with_index do |album, index| %>
+          <div class="col-lg-2 col-md-3 col-sm-4 col-6 album-item" 
+               data-position="<%= album['position'] %>" 
+               data-id="<%= album['id'] %>">
+            <%= render 'album_card', album: album, index: index, is_guest: true %>
+          </div>
+        <% end %>
+      <% else %>
+        <% @favorite_albums.each_with_index do |album, index| %>
+          <div class="col-lg-2 col-md-3 col-sm-4 col-6 album-item" 
+               data-position="<%= album.position %>" 
+               data-id="<%= album.id %>">
+            <%= render 'album_card', album: album, index: index, is_guest: false %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- 操作説明 -->
+  <% unless @favorite_albums.empty? %>
+    <div class="mt-4 p-3 bg-light rounded">
+      <h6 class="mb-2">
+        <i class="fas fa-info-circle text-info me-2"></i>操作方法
+      </h6>
+      <ul class="mb-0 small text-muted">
+        <li>アルバムをドラッグ&ドロップして順序を変更できます</li>
+        <% if @is_guest %>
+          <li>「アカウントに保存」でログインしてリストを永続保存</li>
+        <% else %>
+          <li>変更した順序は「保存」ボタンで保存してください</li>
+          <li>「共有」ボタンでSNSに投稿できます</li>
+        <% end %>
+        <li>×ボタンでアルバムをリストから削除できます</li>
+      </ul>
+    </div>
+  <% end %>
+</div>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function saveLayout() {
+    const items = document.querySelectorAll('.album-item');
+    const positions = Array.from(items).map((item, index) => ({
+      id: item.dataset.id,
+      position: index + 1
+    }));
+
+    fetch('/favorite_albums/update_positions', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
+      },
+      body: JSON.stringify({ positions: positions })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showMessage('順序を保存しました！', 'success');
+      } else {
+        showMessage('保存に失敗しました', 'error');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showMessage('エラーが発生しました', 'error');
+    });
+  }
+
+  function saveToAccount() {
+    fetch('/favorite_albums/save_to_account', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.redirect) {
+        window.location.href = data.redirect;
+      } else if (data.success) {
+        showMessage(data.message, 'success');
+        setTimeout(() => window.location.reload(), 1500);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showMessage('エラーが発生しました', 'error');
+    });
+  }
+
+  function shareToTwitter() {
+    fetch('/favorite_albums/share', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.redirect) {
+        window.location.href = data.redirect;
+      } else {
+        const text = `${data.title}\n${data.description}\n${data.url}`;
+        const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+      }
+    });
+  }
+
+  // グローバルに関数を公開
+  window.saveLayout = saveLayout;
+  window.saveToAccount = saveToAccount;
+  window.shareToTwitter = shareToTwitter;
+
+  function showMessage(message, type) {
+    const alertClass = type === 'error' ? 'alert-danger' : 'alert-success';
+    const alertHtml = `
+      <div class="alert ${alertClass} alert-dismissible fade show position-fixed"
+           style="top: 20px; right: 20px; z-index: 9999;" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+
+    setTimeout(() => {
+      const alert = document.querySelector('.alert');
+      if (alert) alert.remove();
+    }, 3000);
+  }
+});
+</script>

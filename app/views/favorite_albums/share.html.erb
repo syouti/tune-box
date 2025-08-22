@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>名盤リスト SNS投稿</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .share-modal .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .share-preview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            min-height: 400px;
+        }
+        
+        .share-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+        }
+        
+        .share-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .album-grid-share {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+            max-width: 400px;
+        }
+        
+        .album-item-share {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            overflow: hidden;
+        }
+        
+        .album-item-share img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .sns-button {
+            border-radius: 15px;
+            padding: 12px 20px;
+            border: none;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            margin: 5px;
+        }
+        
+        .sns-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .instagram-btn {
+            background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+        }
+        
+        .twitter-btn {
+            background: #1DA1F2;
+        }
+        
+        .threads-btn {
+            background: linear-gradient(45deg, #000000 0%, #333333 100%);
+        }
+        
+        .facebook-btn {
+            background: #1877F2;
+        }
+        
+        .line-btn {
+            background: #00B900;
+        }
+        
+        .copy-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+        
+        .share-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .format-selector {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .format-option {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .format-option.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .format-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .watermark {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            z-index: 10;
+        }
+        
+        .loading-overlay.show {
+            display: flex;
+        }
+        
+        @media (max-width: 768px) {
+            .share-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .album-grid-share {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <!-- 名盤リスト表示エリア（デモ用） -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="mb-0">90年代ロック 最強10選</h3>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#shareModal">
+                                <i class="fas fa-share me-2"></i>SNSに投稿
+                            </button>
+                        </div>
+                        <p class="text-muted mb-3">青春時代に聴いていた名盤たちを集めました。当時の思い出が蘇る...</p>
+                        
+                        <!-- デモ用アルバムグリッド -->
+                        <div class="row g-2">
+                            <div class="col-2"><div class="bg-primary text-white p-3 rounded text-center">Nirvana<br>Nevermind</div></div>
+                            <div class="col-2"><div class="bg-secondary text-white p-3 rounded text-center">Pearl Jam<br>Ten</div></div>
+                            <div class="col-2"><div class="bg-success text-white p-3 rounded text-center">Oasis<br>Wonderwall</div></div>
+                            <div class="col-2"><div class="bg-warning text-white p-3 rounded text-center">Blur<br>Parklife</div></div>
+                            <div class="col-2"><div class="bg-info text-white p-3 rounded text-center">R.E.M.<br>Automatic</div></div>
+                            <div class="col-2"><div class="bg-dark text-white p-3 rounded text-center">Stone Temple<br>Core</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SNS投稿モーダル -->
+    <div class="modal fade share-modal" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="shareModalLabel">
+                        <i class="fas fa-share me-2"></i>名盤リストをSNSに投稿
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body">
+                    <!-- フォーマット選択 -->
+                    <div class="format-selector">
+                        <h6 class="mb-3">投稿フォーマット</h6>
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="format-option active" data-format="square" onclick="selectFormat('square')">
+                                    <i class="fas fa-square mb-2"></i>
+                                    <div>正方形 (1:1)</div>
+                                    <small class="text-muted">Instagram投稿</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="format-option" data-format="story" onclick="selectFormat('story')">
+                                    <i class="fas fa-mobile-alt mb-2"></i>
+                                    <div>ストーリー (9:16)</div>
+                                    <small class="text-muted">Instagram/X Stories</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="format-option" data-format="wide" onclick="selectFormat('wide')">
+                                    <i class="fas fa-rectangle-landscape mb-2"></i>
+                                    <div>横長 (16:9)</div>
+                                    <small class="text-muted">X/Facebook投稿</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- プレビュー画像 -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">プレビュー</h6>
+                        <div class="share-preview" id="sharePreview">
+                            <div class="loading-overlay" id="loadingOverlay">
+                                <div class="text-center">
+                                    <div class="spinner-border text-white mb-2" role="status"></div>
+                                    <div class="text-white">画像を生成中...</div>
+                                </div>
+                            </div>
+                            
+                            <div class="share-content">
+                                <div class="text-center mb-3">
+                                    <h2 class="fw-bold mb-1" id="listTitle">90年代ロック 最強10選</h2>
+                                    <p class="mb-0 opacity-75" id="userName">by 音楽好きのマサト</p>
+                                </div>
+                                
+                                <div class="album-grid-share" id="albumGridShare">
+                                    <div class="album-item-share">Nirvana<br>Nevermind</div>
+                                    <div class="album-item-share">Pearl Jam<br>Ten</div>
+                                    <div class="album-item-share">Oasis<br>Wonderwall</div>
+                                    <div class="album-item-share">Blur<br>Parklife</div>
+                                    <div class="album-item-share">R.E.M.<br>Automatic</div>
+                                    <div class="album-item-share">Stone Temple<br>Core</div>
+                                </div>
+                                
+                                <div class="text-center mt-3">
+                                    <p class="mb-1 opacity-75" id="listDescription">青春時代に聴いていた名盤たちを集めました</p>
+                                    <div class="d-flex align-items-center justify-content-center gap-2 mt-2">
+                                        <i class="fas fa-music"></i>
+                                        <span class="small">6枚のアルバム</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="watermark">
+                                    <i class="fas fa-record-vinyl me-1"></i>TuneBox
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- SNS投稿ボタン -->
+                    <div class="share-options">
+                        <a href="#" class="sns-button instagram-btn" onclick="shareToInstagram()">
+                            <i class="fab fa-instagram"></i>
+                            Instagram
+                        </a>
+                        
+                        <a href="#" class="sns-button twitter-btn" onclick="shareToTwitter()">
+                            <i class="fab fa-x-twitter"></i>
+                            X (Twitter)
+                        </a>
+                        
+                        <a href="#" class="sns-button threads-btn" onclick="shareToThreads()">
+                            <i class="fab fa-threads"></i>
+                            Threads
+                        </a>
+                        
+                        <a href="#" class="sns-button facebook-btn" onclick="shareToFacebook()">
+                            <i class="fab fa-facebook"></i>
+                            Facebook
+                        </a>
+                        
+                        <a href="#" class="sns-button line-btn" onclick="shareToLine()">
+                            <i class="fab fa-line"></i>
+                            LINE
+                        </a>
+                        
+                        <button class="sns-button copy-btn" onclick="downloadImage()">
+                            <i class="fas fa-download"></i>
+                            画像をダウンロード
+                        </button>
+                    </div>
+                    
+                    <!-- 投稿テキスト -->
+                    <div class="mt-4">
+                        <h6>投稿テキスト</h6>
+                        <textarea class="form-control" id="shareText" rows="3" placeholder="投稿に追加するテキストを入力...">🎵 私の「90年代ロック 最強10選」を作成しました！
+
+青春時代に聴いていた名盤たちを集めました。あなたのお気に入りはどれですか？
+
+#TuneBox #名盤リスト #90年代ロック #音楽好きと繋がりたい</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentFormat = 'square';
+        let generatedImageBlob = null;
+        
+        // フォーマット選択
+        function selectFormat(format) {
+            currentFormat = format;
+            
+            // アクティブ状態の更新
+            document.querySelectorAll('.format-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            document.querySelector(`[data-format="${format}"]`).classList.add('active');
+            
+            // プレビューのサイズ調整
+            const preview = document.getElementById('sharePreview');
+            const albumGrid = document.getElementById('albumGridShare');
+            
+            switch(format) {
+                case 'square':
+                    preview.style.width = '400px';
+                    preview.style.height = '400px';
+                    preview.style.margin = '0 auto';
+                    albumGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                    break;
+                case 'story':
+                    preview.style.width = '300px';
+                    preview.style.height = '533px';
+                    preview.style.margin = '0 auto';
+                    albumGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                    break;
+                case 'wide':
+                    preview.style.width = '500px';
+                    preview.style.height = '281px';
+                    preview.style.margin = '0 auto';
+                    albumGrid.style.gridTemplateColumns = 'repeat(6, 1fr)';
+                    break;
+            }
+        }
+        
+        // 画像生成
+        function generateImage() {
+            const loading = document.getElementById('loadingOverlay');
+            loading.classList.add('show');
+            
+            const element = document.getElementById('sharePreview');
+            
+            html2canvas(element, {
+                backgroundColor: null,
+                scale: 2, // 高画質
+                useCORS: true,
+                allowTaint: true
+            }).then(canvas => {
+                canvas.toBlob((blob) => {
+                    generatedImageBlob = blob;
+                    loading.classList.remove('show');
+                }, 'image/png', 1.0);
+            }).catch(error => {
+                console.error('画像生成エラー:', error);
+                loading.classList.remove('show');
+                alert('画像の生成に失敗しました');
+            });
+        }
+        
+        // Instagram投稿
+        function shareToInstagram() {
+            generateImage();
+            
+            const text = document.getElementById('shareText').value;
+            const url = `https://www.instagram.com/`;
+            
+            // Instagramアプリまたはウェブページを開く
+            if (navigator.userAgent.includes('Mobile')) {
+                window.open(`instagram://`, '_blank');
+            } else {
+                window.open(url, '_blank');
+                copyToClipboard(text);
+                alert('画像をダウンロードして、Instagramアプリで投稿してください。投稿テキストがクリップボードにコピーされました。');
+            }
+        }
+        
+        // X (Twitter) 投稿
+        function shareToTwitter() {
+            const text = document.getElementById('shareText').value;
+            const hashtags = 'TuneBox,名盤リスト,音楽';
+            const url = window.location.href;
+            
+            const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&hashtags=${encodeURIComponent(hashtags)}&url=${encodeURIComponent(url)}`;
+            window.open(twitterUrl, '_blank');
+            
+            // 画像は別途アップロードする必要があることを通知
+            setTimeout(() => {
+                if (confirm('投稿テキストがTwitterに設定されました。画像もアップロードしますか？')) {
+                    downloadImage();
+                }
+            }, 1000);
+        }
+        
+        // Threads投稿
+        function shareToThreads() {
+            const text = document.getElementById('shareText').value;
+            const url = `https://threads.net/intent/post?text=${encodeURIComponent(text)}`;
+            
+            window.open(url, '_blank');
+            setTimeout(() => {
+                if (confirm('投稿テキストがThreadsに設定されました。画像もアップロードしますか？')) {
+                    downloadImage();
+                }
+            }, 1000);
+        }
+        
+        // Facebook投稿
+        function shareToFacebook() {
+            const url = window.location.href;
+            const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+            
+            window.open(facebookUrl, '_blank');
+            setTimeout(() => {
+                if (confirm('リンクがFacebookに設定されました。画像もアップロードしますか？')) {
+                    downloadImage();
+                }
+            }, 1000);
+        }
+        
+        // LINE投稿
+        function shareToLine() {
+            const text = document.getElementById('shareText').value;
+            const url = window.location.href;
+            const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text + '\n' + url)}`;
+            
+            window.open(lineUrl, '_blank');
+        }
+        
+        // 画像ダウンロード
+        function downloadImage() {
+            if (!generatedImageBlob) {
+                generateImage();
+                setTimeout(downloadImage, 2000);
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(generatedImageBlob);
+            link.download = `tunebox-playlist-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // クリップボードにコピー
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                console.log('テキストがクリップボードにコピーされました');
+            }).catch(err => {
+                console.error('コピーに失敗しました:', err);
+            });
+        }
+        
+        // モーダル表示時に画像を生成
+        document.getElementById('shareModal').addEventListener('shown.bs.modal', function() {
+            setTimeout(generateImage, 500);
+        });
+        
+        // 初期フォーマット設定
+        document.addEventListener('DOMContentLoaded', function() {
+            selectFormat('square');
+        });
+    </script>
+</body>
+</html>
