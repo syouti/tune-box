@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_08_20_172308) do
+ActiveRecord::Schema[7.2].define(version: 2025_08_22_171856) do
   create_table "albums", force: :cascade do |t|
     t.string "spotify_id"
     t.string "name"

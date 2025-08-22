@@ -1,5 +1,5 @@
 <div class="container mt-4">
-  <h1>🎵 アルバム検索</h1>
+  <h1> アルバム検索</h1>
 
   <!-- 検索フォーム -->
   <%= form_with url: albums_index_path, method: :get, local: true, class: "mb-4" do |form| %>
@@ -41,7 +41,7 @@
               </div>
             <% end %>
 
-            <!-- お気に入りボタン（画像の上に重ねて表示） -->
+            <!-- 🆕 修正されたお気に入りボタン -->
             <div class="position-absolute top-0 end-0 p-2" style="z-index: 10;">
              <button class="btn btn-outline-success btn-sm add-btn"
                data-spotify-id="<%= album[:spotify_id] %>"
@@ -51,6 +51,7 @@
                data-external-url="<%= album[:external_url] %>"
                data-release-date="<%= album[:release_date] %>"
                data-total-tracks="<%= album[:total_tracks] %>"
+               onclick="addToFavorites(this)"
                style="border-radius: 8px; width: 40px; height: 40px; backdrop-filter: blur(5px); background: rgba(255,255,255,0.9); position: relative; z-index: 11;">
               <i class="fas fa-plus"></i>
              </button>
@@ -162,210 +163,369 @@
 </div>
 
 <script>
-let clickHandlerAttached = false;
+// 🆕 検索ページ用のJavaScript
+let currentFavoriteCount = 0;
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded'); // デバッグ用
-    
-    // ページ読み込み時に現在のお気に入り数を取得
-    fetchCurrentFavoriteCount();
-    
-    if (clickHandlerAttached) {
-        console.log('Click handler already attached, skipping');
-        return;
-    }
-    
-    // add-btnクラスのボタンにクリックイベントを追加
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.add-btn')) {
-            e.preventDefault(); // デフォルトの動作を停止
-            e.stopPropagation(); // イベントの伝播を停止
-            
-            const btn = e.target.closest('.add-btn');
-            console.log('Button clicked:', btn); // デバッグ用
-            console.log('Button disabled:', btn.disabled); // デバッグ用
-            
-            if (btn.disabled) {
-                console.log('Button is disabled, ignoring click');
-                return;
-            }
-            
-            handleAddButtonClick(btn);
-        }
-    });
-    
-    clickHandlerAttached = true;
-    console.log('Click handler attached successfully');
+  console.log('🔧 Initializing search page...');
+  
+  // お気に入り数を読み込み
+  loadFavoriteCount();
+  
+  // 既存のお気に入りを確認
+  checkExistingFavorites();
 });
 
-function handleAddButtonClick(btn) {
-    console.log('Handling button click for:', btn.dataset.name);
-    
-    // 既に追加済みかチェック（ボタンの見た目で判断）
-    const isAdded = btn.classList.contains('added');
-    
-    if (!isAdded) {
-        // 追加前に上限チェック
-        const currentCount = getCurrentFavoriteCount();
-        if (currentCount >= 25) {
-            console.log('Limit reached:', currentCount);
-            showMessage('お気に入りは最大25個までです', 'error');
-            return;
-        }
+// 🆕 お気に入り数を読み込む
+function loadFavoriteCount() {
+  console.log('📊 Loading favorite count...');
+  
+  fetch('/favorite_albums.json', {
+    headers: {
+      'Accept': 'application/json',
+      'X-CSRF-Token': getCSRFToken()
     }
-    
-    // ボタンからデータを取得
-    const albumData = {
-        spotify_id: btn.dataset.spotifyId,
-        name: btn.dataset.name,
-        artist: btn.dataset.artist,
-        image_url: btn.dataset.imageUrl,
-        external_url: btn.dataset.externalUrl,
-        release_date: btn.dataset.releaseDate,
-        total_tracks: btn.dataset.totalTracks
-    };
-    
-    console.log('Album data:', albumData); // デバッグ用
-    
-    // ボタンを一時的に無効化
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    
-    // サーバーに送信
-    fetch('/favorite_albums/toggle', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-            favorite_album: albumData
-        })
-    })
-    .then(response => {
-        console.log('Response status:', response.status); // デバッグ用
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Response data:', data); // デバッグ用
-        
-        // ボタンを有効化
-        btn.disabled = false;
-        
-        if (data.status === 'added') {
-            updateButtonState(btn, true);
-            console.log('Album added successfully');
-            updateFavoriteCount(data.current_count || getCurrentFavoriteCount() + 1);
-        } else if (data.status === 'removed') {
-            updateButtonState(btn, false);
-            console.log('Album removed successfully');
-            updateFavoriteCount(data.current_count || getCurrentFavoriteCount() - 1);
-        } else if (data.status === 'error') {
-            updateButtonState(btn, false);
-            console.log('Server error:', data.message);
-            showMessage(data.message || 'エラーが発生しました', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Fetch error:', error);
-        btn.disabled = false;
-        updateButtonState(btn, false);
-        showMessage('通信エラーが発生しました', 'error');
-    });
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    currentFavoriteCount = data.length;
+    updateFavoriteCounter();
+    console.log('✅ Current favorite count:', currentFavoriteCount);
+  })
+  .catch(error => {
+    console.error('❌ Error loading favorites:', error);
+    document.getElementById('favorite-counter').textContent = 'エラー';
+  });
 }
 
-let currentFavoriteCount = 0; // グローバル変数で管理
-
-// お気に入り数を管理する関数
-function getCurrentFavoriteCount() {
-    return currentFavoriteCount;
-}
-
-function updateFavoriteCount(count) {
-    currentFavoriteCount = count;
-    const counter = document.getElementById('favorite-counter');
-    if (counter) {
-        counter.textContent = count;
+// 🆕 お気に入り数表示を更新
+function updateFavoriteCounter() {
+  const counter = document.getElementById('favorite-counter');
+  if (counter) {
+    counter.textContent = currentFavoriteCount;
+    
+    // 上限に近づいた時の警告表示
+    const status = document.getElementById('favorite-status');
+    if (currentFavoriteCount >= 25) {
+      status.classList.remove('alert-info');
+      status.classList.add('alert-danger');
+    } else if (currentFavoriteCount >= 20) {
+      status.classList.remove('alert-info');
+      status.classList.add('alert-warning');
     } else {
-        console.log('favorite-counter element not found, count stored in memory:', count);
+      status.classList.remove('alert-warning', 'alert-danger');
+      status.classList.add('alert-info');
     }
-    checkFavoriteLimit();
+  }
 }
 
-function checkFavoriteLimit() {
-    const count = getCurrentFavoriteCount();
-    const addButtons = document.querySelectorAll('.add-btn');
+// 🆕 既存のお気に入りをチェックして表示を更新
+function checkExistingFavorites() {
+  fetch('/favorite_albums.json', {
+    headers: {
+      'Accept': 'application/json',
+      'X-CSRF-Token': getCSRFToken()
+    }
+  })
+  .then(response => response.json())
+  .then(favorites => {
+    const favoriteIds = new Set(favorites.map(fav => fav.spotify_id));
     
-    addButtons.forEach(btn => {
-        const isAdded = btn.classList.contains('added');
-        if (!isAdded && count >= 25) {
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-            btn.title = 'お気に入りは最大25個までです';
-        } else if (!isAdded) {
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            btn.title = '';
-        }
+    // 各アルバムのボタン状態を更新
+    document.querySelectorAll('.add-btn').forEach(btn => {
+      const spotifyId = btn.dataset.spotifyId;
+      if (favoriteIds.has(spotifyId)) {
+        updateButtonToRemove(btn);
+      }
     });
+  })
+  .catch(error => {
+    console.error('❌ Error checking favorites:', error);
+  });
 }
 
-function updateButtonState(btn, isAdded) {
-    if (isAdded) {
-        btn.style.background = '#28a745';
-        btn.style.borderColor = '#28a745';
-        btn.style.color = 'white';
-        btn.innerHTML = '<i class="fas fa-check"></i>';
-        btn.classList.add('added');
-    } else {
-        btn.style.background = 'rgba(255,255,255,0.9)';
-        btn.style.borderColor = '#28a745';
-        btn.style.color = '#28a745';
-        btn.innerHTML = '<i class="fas fa-plus"></i>';
-        btn.classList.remove('added');
-    }
+// 🆕 お気に入り追加/削除のメイン関数
+function addToFavorites(button) {
+  console.log('🎯 Add to favorites clicked');
+  
+  const isCurrentlyFavorite = button.classList.contains('btn-danger');
+  const spotifyId = button.dataset.spotifyId;
+  
+  if (isCurrentlyFavorite) {
+    // 削除処理
+    removeFavorite(button, spotifyId);
+  } else {
+    // 追加処理
+    addFavorite(button);
+  }
 }
 
-// 現在のお気に入り数を取得する関数
-function fetchCurrentFavoriteCount() {
-    fetch('/favorite_albums.json')
-        .then(response => response.json())
-        .then(data => {
-            const count = data.length || 0;
-            console.log('Fetched favorite count:', count);
-            updateFavoriteCount(count);
-        })
-        .catch(error => {
-            console.log('お気に入り数の取得に失敗しました:', error);
-            // エラーの場合は0で初期化
-            updateFavoriteCount(0);
-        });
-}
-
-// メッセージ表示関数
-function showMessage(message, type) {
-    // 既存のアラートを削除
-    const existingAlerts = document.querySelectorAll('.custom-alert');
-    existingAlerts.forEach(alert => alert.remove());
+// 🆕 お気に入り追加処理
+function addFavorite(button) {
+  // 上限チェック
+  if (currentFavoriteCount >= 25) {
+    showMessage('お気に入りは最大25個までです', 'error');
+    return;
+  }
+  
+  // ボタンの状態を一時的に無効化
+  button.disabled = true;
+  const originalContent = button.innerHTML;
+  button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  
+  const albumData = {
+    spotify_id: button.dataset.spotifyId,
+    name: button.dataset.name,
+    artist: button.dataset.artist,
+    image_url: button.dataset.imageUrl,
+    external_url: button.dataset.externalUrl,
+    release_date: button.dataset.releaseDate,
+    total_tracks: parseInt(button.dataset.totalTracks)
+  };
+  
+  console.log('📤 Adding album to favorites:', albumData);
+  
+  fetch('/favorite_albums/toggle', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': getCSRFToken(),
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify({
+      favorite_album: albumData
+    })
+  })
+  .then(response => {
+    console.log('📥 Response status:', response.status);
     
-    const alertClass = type === 'error' ? 'alert-danger' : 
-                      type === 'info' ? 'alert-info' : 'alert-success';
-    const alertHtml = `
-        <div class="alert ${alertClass} alert-dismissible fade show position-fixed custom-alert"
-             style="top: 20px; right: 20px; z-index: 1050; max-width: 300px; pointer-events: none;" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" style="pointer-events: auto;"></button>
+    if (!response.ok) {
+      return response.text().then(text => {
+        console.error('❌ Response text:', text);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      });
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('✅ Add response:', data);
+    
+    button.disabled = false;
+    
+    if (data.status === 'added') {
+      currentFavoriteCount = data.current_count;
+      updateFavoriteCounter();
+      updateButtonToRemove(button);
+      showMessage(`「${albumData.name}」をコレクションに追加しました！`, 'success');
+    } else if (data.status === 'error') {
+      button.innerHTML = originalContent;
+      showMessage(data.message || 'エラーが発生しました', 'error');
+    }
+  })
+  .catch(error => {
+    console.error('❌ Add error:', error);
+    button.disabled = false;
+    button.innerHTML = originalContent;
+    showMessage('追加中にエラーが発生しました: ' + error.message, 'error');
+  });
+}
+
+// 🆕 お気に入り削除処理
+function removeFavorite(button, spotifyId) {
+  // ボタンの状態を一時的に無効化
+  button.disabled = true;
+  const originalContent = button.innerHTML;
+  button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  
+  console.log('🗑️ Removing album from favorites:', spotifyId);
+  
+  fetch(`/favorite_albums/${spotifyId}`, {
+    method: 'DELETE',
+    headers: {
+      'X-CSRF-Token': getCSRFToken(),
+      'Accept': 'application/json'
+    }
+  })
+  .then(response => {
+    console.log('📥 Delete response status:', response.status);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('✅ Remove response:', data);
+    
+    button.disabled = false;
+    
+    if (data.status === 'removed') {
+      currentFavoriteCount = Math.max(0, currentFavoriteCount - 1);
+      updateFavoriteCounter();
+      updateButtonToAdd(button);
+      showMessage('コレクションから削除しました', 'success');
+    }
+  })
+  .catch(error => {
+    console.error('❌ Remove error:', error);
+    button.disabled = false;
+    button.innerHTML = originalContent;
+    showMessage('削除中にエラーが発生しました: ' + error.message, 'error');
+  });
+}
+
+// 🆕 ボタンを削除状態に更新
+function updateButtonToRemove(button) {
+  button.classList.remove('btn-outline-success');
+  button.classList.add('btn-danger');
+  button.innerHTML = '<i class="fas fa-check"></i>';
+  button.title = 'コレクションから削除';
+}
+
+// 🆕 ボタンを追加状態に更新
+function updateButtonToAdd(button) {
+  button.classList.remove('btn-danger');
+  button.classList.add('btn-outline-success');
+  button.innerHTML = '<i class="fas fa-plus"></i>';
+  button.title = 'コレクションに追加';
+}
+
+// 🆕 CSRFトークンを取得
+function getCSRFToken() {
+  const token = document.querySelector('[name="csrf-token"]')?.getAttribute('content') || 
+               document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+  
+  if (!token) {
+    console.error('❌ CSRF token not found');
+  }
+  
+  return token;
+}
+
+// 🆕 メッセージ表示機能
+function showMessage(message, type = 'info') {
+  console.log(`💬 Message (${type}):`, message);
+  
+  // 既存のアラートを削除
+  const existingAlert = document.querySelector('.custom-alert');
+  if (existingAlert) {
+    existingAlert.remove();
+  }
+  
+  const alertClass = type === 'error' ? 'alert-danger' : 
+                    type === 'success' ? 'alert-success' : 'alert-info';
+  
+  const alertHtml = `
+    <div class="alert ${alertClass} alert-dismissible fade show position-fixed custom-alert"
+         style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+          <span>${message}</span>
         </div>
-    `;
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  `;
 
-    document.body.insertAdjacentHTML('beforeend', alertHtml);
+  document.body.insertAdjacentHTML('beforeend', alertHtml);
 
-    setTimeout(() => {
-        const alert = document.querySelector('.custom-alert');
-        if (alert) alert.remove();
-    }, 3000);
+  // 自動で消去
+  setTimeout(() => {
+    const alert = document.querySelector('.custom-alert');
+    if (alert) {
+      alert.classList.remove('show');
+      setTimeout(() => {
+        if (alert.parentNode) {
+          alert.remove();
+        }
+      }, 150);
+    }
+  }, 4000);
 }
 </script>
+
+<style>
+/* 🆕 検索ページ用の追加スタイル */
+.hover-card {
+  transition: all 0.3s ease;
+  border: 1px solid #dee2e6;
+}
+
+.hover-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  border-color: #667eea;
+}
+
+.add-btn {
+  transition: all 0.3s ease;
+  border: 2px solid currentColor !important;
+}
+
+.add-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.add-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.custom-alert {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ボタンの状態別スタイル */
+.btn-outline-success.add-btn {
+  color: #198754;
+  border-color: #198754;
+  background: rgba(255,255,255,0.9);
+}
+
+.btn-outline-success.add-btn:hover {
+  color: white;
+  background: #198754;
+  border-color: #198754;
+}
+
+.btn-danger.add-btn {
+  color: white;
+  background: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-danger.add-btn:hover {
+  background: #c82333;
+  border-color: #bd2130;
+}
+
+/* お気に入り数の警告表示 */
+#favorite-status.alert-warning {
+  border-color: #ffc107;
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+#favorite-status.alert-danger {
+  border-color: #dc3545;
+  background-color: #f8d7da;
+  color: #721c24;
+}
+</style>

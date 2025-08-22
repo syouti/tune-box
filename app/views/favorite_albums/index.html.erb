@@ -11,7 +11,7 @@
     <%= link_to albums_index_path, class: "btn btn-primary add-album-btn" do %>
       <i class="fas fa-plus me-2"></i>アルバムを追加
     <% end %>
-    <!-- 🆕 一括削除ボタンを追加 -->
+    <!-- 一括削除ボタンを追加 -->
     <% if @favorite_albums.any? %>
       <button class="btn btn-danger ms-2 bulk-delete-btn" onclick="showBulkDeleteModal()">
         <i class="fas fa-trash me-2"></i>一括削除
@@ -23,14 +23,30 @@
         <div class="collection-canvas" id="canvas">
           <% if @favorite_albums.any? %>
             <% @favorite_albums.each_with_index do |album, index| %>
+              <%
+                # 🆕 保存された位置を優先、なければデフォルト位置を計算
+                if album.position_x.present? && album.position_y.present?
+                  # データベースに保存された位置を使用
+                  position_x = album.position_x
+                  position_y = album.position_y
+                  grid_x = (position_x / 140).to_i
+                  grid_y = (position_y / 140).to_i
+                else
+                  # デフォルト位置を計算
+                  grid_x = index % 5
+                  grid_y = (index / 5).floor
+                  position_x = grid_x * 140
+                  position_y = grid_y * 140
+                end
+              %>
               <div class="album-jacket"
                    data-id="<%= album.id %>"
                    data-spotify-id="<%= album.spotify_id %>"
-                   data-grid-x="<%= index % 5 %>"
-                   data-grid-y="<%= (index / 5).floor %>"
+                   data-grid-x="<%= grid_x %>"
+                   data-grid-y="<%= grid_y %>"
                    data-album-name="<%= album.name %>"
                    data-artist-name="<%= album.artist %>"
-                   style="top: <%= album.position_y || ((index / 5).floor * 140) %>px; left: <%= album.position_x || ((index % 5) * 140) %>px;">
+                   style="top: <%= position_y %>px; left: <%= position_x %>px;">
                 <img src="<%= album.image_url %>" alt="<%= album.name %>">
                 <button class="delete-btn" onclick="removeAlbum(this, '<%= album.spotify_id %>')">
                   <i class="fas fa-times"></i>
@@ -58,28 +74,39 @@
 
     <!-- 右側: アルバムリスト -->
     <div class="ranking-section">
-      <div class="ranking-container">
-        
-        
-        <div class="album-list" id="albumList">
-          <% if @favorite_albums.any? %>
-            <% @favorite_albums.each_with_index do |album, index| %>
-              <div class="album-list-item" data-grid-position="<%= index %>" data-spotify-id="<%= album.spotify_id %>">
-                <span class="album-title"><%= album.name %></span>
-                <span class="artist-name"><%= album.artist %></span>
-                <button class="btn btn-sm btn-outline-primary search-btn" onclick="highlightAlbum('<%= album.spotify_id %>')">
-                  <i class="fas fa-search"></i>
-                </button>
-              </div>
-            <% end %>
-          <% else %>
-            <div class="empty-album-list">
-              <i class="fas fa-music fa-2x text-muted mb-3"></i>
-              <p class="text-muted">アルバムを追加するとここに表示されます</p>
-            </div>
-          <% end %>
+  <div class="ranking-container">
+    
+    
+    <div class="album-list" id="albumList">
+      <% if @favorite_albums.any? %>
+        <% 
+          # 位置に基づいてソート（左上から右下へ）
+          sorted_albums = @favorite_albums.sort_by do |album|
+            if album.position_x.present? && album.position_y.present?
+              grid_y = (album.position_y / 140).to_i
+              grid_x = (album.position_x / 140).to_i
+            else
+              # デフォルト位置でソート
+              index = @favorite_albums.index(album)
+              grid_y = (index / 5).floor
+              grid_x = index % 5
+            end
+            [grid_y, grid_x]  # Y座標優先、次にX座標でソート
+          end
+        %>
+        <% sorted_albums.each_with_index do |album, display_index| %>
+          <div class="album-list-item" data-grid-position="<%= display_index %>" data-spotify-id="<%= album.spotify_id %>">
+            <span class="album-number"><%= display_index + 1 %></span>
+            <span class="album-title"><%= album.name %></span>
+            <span class="artist-name"><%= album.artist %></span>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="empty-album-list">
+          <i class="fas fa-music fa-2x text-muted mb-3"></i>
+          <p class="text-muted">アルバムを追加するとここに表示されます</p>
         </div>
-      </div>
+      <% end %>
     </div>
   </div>
 </div>
@@ -157,8 +184,6 @@
     </div>
   </div>
 </div>
-
-
 
 <style>
 .collection-container {
@@ -333,7 +358,7 @@
   color: #ffffff;
 }
 
-/* 右側アルバムリスト */
+/* 右側アルバムリスト - 番号付きダークテーマ */
 .ranking-section {
   flex: 1;
   min-width: 400px;
@@ -341,22 +366,24 @@
 }
 
 .ranking-container {
-  background: white;
+  background: #000000; /* 黒背景 */
   border-radius: 15px;
   padding: 20px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3); /* シャドウを強化 */
   height: 742px;
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 20px;
+  border: 1px solid #333; /* 薄いボーダーを追加 */
 }
 
 .ranking-header {
   flex: 0 0 auto;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 2px solid #333; /* ダークグレーのボーダー */
   padding-bottom: 15px;
   margin-bottom: 15px;
+  color: #ffffff; /* 白文字 */
 }
 
 .album-list {
@@ -371,72 +398,79 @@
 .album-list-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 8px 12px;
-  background: #f8f9fa;
+  background: #1a1a1a;
   border-radius: 6px;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border: 1px solid transparent;
+  border: 1px solid #333;
   height: calc((100% - 72px) / 25);
   min-height: 20px;
   white-space: nowrap;
+  gap: 8px; /* 🆕 要素間のスペースを少し縮小 */
 }
 
 .album-list-item:hover {
-  background: #e9ecef;
+  background: #2a2a2a; /* ホバー時により明るいグレー */
   transform: translateX(5px) translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 15px rgba(255,255,255,0.1); /* 白いシャドウ */
+  border-color: #555; /* ホバー時のボーダー */
 }
 
 .album-list-item.hover-linked {
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(102, 126, 234, 0.2); /* 青の透明度を上げる */
   border-color: #667eea;
   transform: translateX(5px) translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
 .album-list-item.highlighted {
-  background: rgba(102, 126, 234, 0.2);
+  background: rgba(102, 126, 234, 0.3); /* ハイライト時 */
   border-color: #667eea;
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
   transform: translateX(10px) translateY(-5px);
+}
+
+/* 🆕 番号のスタイル */
+.album-number {
+  font-weight: 700;
+  font-size: 14px;
+  color: #667eea;
+  min-width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(102, 126, 234, 0.3);
 }
 
 .album-title {
   font-weight: 600;
   font-size: 12px;
-  color: #333;
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 0 1 auto;
+  flex: 1; /* 🆕 利用可能スペースを使用 */
   text-align: left;
-  max-width: 45%;
+  min-width: 0; /* 🆕 縮小を許可 */
+  margin-right: 8px; /* 🆕 右マージンを縮小 */
 }
 
 .artist-name {
-  font-size: 11px;
-  color: #666;
+  font-size: 10px;
+  color: #cccccc;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
+  flex: 0 0 auto; /* 🆕 固定サイズ */
+  max-width: 150px; /* 🆕 最大幅を拡大 */
+  min-width: 80px; /* 🆕 最小幅を確保 */
   text-align: right;
-  margin-left: 15px;
-  margin-right: 10px;
-}
-
-.search-btn {
-  padding: 4px 8px;
-  font-size: 10px;
-  border-radius: 4px;
-  flex-shrink: 0;
-  width: 30px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
 .empty-album-list {
   display: flex;
@@ -445,8 +479,53 @@
   justify-content: center;
   height: 100%;
   text-align: center;
+  color: #cccccc; /* 薄いグレー文字 */
 }
 
+.empty-album-list i {
+  color: #666666; /* アイコンは中間グレー */
+}
+
+/* ヘッダーがある場合のスタイル */
+.ranking-header h3,
+.ranking-header h4,
+.ranking-header h5 {
+  color: #ffffff;
+  margin: 0;
+}
+
+/* スクロールバーのカスタマイズ（Webkit系ブラウザ） */
+.album-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.album-list::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 3px;
+}
+
+.album-list::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+.album-list::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* 🆕 ホバー時の番号のスタイル */
+.album-list-item:hover .album-number {
+  background: rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.5);
+  color: #8fa4f3;
+}
+
+.album-list-item.hover-linked .album-number,
+.album-list-item.highlighted .album-number {
+  background: rgba(102, 126, 234, 0.4);
+  border-color: #667eea;
+  color: #ffffff;
+}
 /* モーダル */
 .modal-content {
   border-radius: 20px;
@@ -574,27 +653,60 @@
   min-width: 300px;
 }
 
+.album-jacket.collision-preview {
+  border: 2px dashed #ffc107 !important;
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  transform: scale(1.02) !important;
+  transition: all 0.2s ease !important;
+}
+
+.album-jacket.dragging {
+  transform: rotate(5deg) scale(1.1) !important;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.4) !important;
+  z-index: 1000 !important;
+  border: 2px solid #667eea !important;
+  transition: none !important;
+}
+
+/* ドラッグ中のキャンバス状態 */
+.collection-canvas.dragging-active {
+  cursor: grabbing !important;
+}
+
+.collection-canvas.dragging-active .album-jacket:not(.dragging) {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* より明確な視覚的フィードバック */
+.album-jacket.dragging {
+  box-shadow: 
+    0 15px 35px rgba(0,0,0,0.4),
+    0 0 0 3px rgba(102, 126, 234, 0.3) !important;
+}
 </style>
 
 <script>
+//  改善されたドラッグ&ドロップシステム（番号対応版）
 let isDragging = false;
 let currentElement = null;
 let startX = 0;
 let startY = 0;
 let selectedAlbum = null;
-let occupiedPositions = new Set();
+let occupiedPositions = new Map(); // Set → Map に変更（より詳細な情報を保持）
 let saveTimeout = null;
+let dragOffset = { x: 0, y: 0 }; // ドラッグ開始時のオフセット
 
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🔧 Initializing canvas page...');
   checkCSRFToken();
+  updateOccupiedPositions(); //  順序変更：最初に位置情報を更新
   initializeDragAndDrop();
-  updateOccupiedPositions();
   updateAlbumList();
   initializeHoverLinks();
 });
 
-// 🆕 CSRF トークンの状態確認
+// CSRF トークンの状態確認
 function checkCSRFToken() {
   const token = document.querySelector('[name="csrf-token"]')?.getAttribute('content') || 
                document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -656,7 +768,7 @@ function linkHover(spotifyId, isHover) {
   }
 }
 
-// ドラッグ&ドロップ初期化
+// ドラッグ&ドロップ初期化（改善版）
 function initializeDragAndDrop() {
   const albums = document.querySelectorAll('.album-jacket');
   const canvas = document.getElementById('canvas');
@@ -667,28 +779,41 @@ function initializeDragAndDrop() {
         return;
       }
 
+      // ドラッグ状態の初期化
       isDragging = true;
       currentElement = this;
       canvas.classList.add('dragging-active');
 
-      albums.forEach(a => a.classList.remove('selected'));
+      // 既存の選択状態をクリア
+      albums.forEach(a => a.classList.remove('selected', 'hover-linked'));
       this.classList.add('dragging');
       selectedAlbum = this;
 
+      // 正確な座標計算
       const rect = this.getBoundingClientRect();
       const canvasRect = canvas.getBoundingClientRect();
+      
+      // マウス位置とアルバム左上角の相対位置を保存
+      dragOffset.x = e.clientX - rect.left;
+      dragOffset.y = e.clientY - rect.top;
 
-      startX = e.clientX - rect.left;
-      startY = e.clientY - rect.top;
-
+      // 現在のグリッド位置を保存
       const currentGridX = parseInt(this.dataset.gridX);
       const currentGridY = parseInt(this.dataset.gridY);
       
       this.dataset.originalGridX = currentGridX;
       this.dataset.originalGridY = currentGridY;
       
-      occupiedPositions.delete(`${currentGridX},${currentGridY}`);
+      // 占有位置から一時的に削除（重複チェック用）
+      const currentPosKey = `${currentGridX},${currentGridY}`;
+      if (occupiedPositions.has(currentPosKey)) {
+        occupiedPositions.delete(currentPosKey);
+        console.log(`🔄 Temporarily removed position: ${currentPosKey}`);
+      }
 
+      // ドラッグ中の視覚効果を向上
+      this.style.zIndex = '1000';
+      
       e.preventDefault();
     });
   });
@@ -697,82 +822,182 @@ function initializeDragAndDrop() {
     if (!isDragging || !currentElement) return;
 
     const canvasRect = canvas.getBoundingClientRect();
-    const newX = e.clientX - canvasRect.left - startX;
-    const newY = e.clientY - canvasRect.top - startY;
+    
+    // 正確な新しい位置を計算
+    const newX = e.clientX - canvasRect.left - dragOffset.x;
+    const newY = e.clientY - canvasRect.top - dragOffset.y;
 
-    const gridX = Math.max(0, Math.min(4, Math.round(newX / 140)));
-    const gridY = Math.max(0, Math.min(4, Math.round(newY / 140)));
+    // キャンバス境界内に制限
+    const boundedX = Math.max(0, Math.min(560, newX)); // 700px - 140px = 560px
+    const boundedY = Math.max(0, Math.min(560, newY));
+
+    // グリッド位置を計算
+    const gridX = Math.round(boundedX / 140);
+    const gridY = Math.round(boundedY / 140);
     
-    const snapX = gridX * 140;
-    const snapY = gridY * 140;
+    // グリッド範囲を確実に制限
+    const clampedGridX = Math.max(0, Math.min(4, gridX));
+    const clampedGridY = Math.max(0, Math.min(4, gridY));
     
+    // スナップ位置を計算
+    const snapX = clampedGridX * 140;
+    const snapY = clampedGridY * 140;
+    
+    // 位置とデータの同期更新
     currentElement.style.left = snapX + 'px';
     currentElement.style.top = snapY + 'px';
-    currentElement.dataset.gridX = gridX;
-    currentElement.dataset.gridY = gridY;
+    currentElement.dataset.gridX = clampedGridX;
+    currentElement.dataset.gridY = clampedGridY;
+
+    // リアルタイム衝突検出（視覚的フィードバック）
+    const targetAlbum = findAlbumAtPosition(clampedGridX, clampedGridY, currentElement);
+    if (targetAlbum) {
+      targetAlbum.classList.add('collision-preview');
+    } else {
+      // 既存のプレビューをクリア
+      document.querySelectorAll('.collision-preview').forEach(el => {
+        el.classList.remove('collision-preview');
+      });
+    }
   });
 
   document.addEventListener('mouseup', function() {
-    if (currentElement) {
-      currentElement.classList.remove('dragging');
-      canvas.classList.remove('dragging-active');
-      
-      const newGridX = parseInt(currentElement.dataset.gridX);
-      const newGridY = parseInt(currentElement.dataset.gridY);
-      const originalGridX = parseInt(currentElement.dataset.originalGridX);
-      const originalGridY = parseInt(currentElement.dataset.originalGridY);
-      
+    if (!currentElement) return;
+
+    // ドラッグ状態のクリーンアップ
+    currentElement.classList.remove('dragging');
+    currentElement.style.zIndex = '';
+    canvas.classList.remove('dragging-active');
+    
+    // 衝突プレビューをクリア
+    document.querySelectorAll('.collision-preview').forEach(el => {
+      el.classList.remove('collision-preview');
+    });
+    
+    const newGridX = parseInt(currentElement.dataset.gridX);
+    const newGridY = parseInt(currentElement.dataset.gridY);
+    const originalGridX = parseInt(currentElement.dataset.originalGridX);
+    const originalGridY = parseInt(currentElement.dataset.originalGridY);
+    
+    console.log('🎯 Drop detected:', {
+      album: currentElement.dataset.albumName,
+      from: `${originalGridX},${originalGridY}`,
+      to: `${newGridX},${newGridY}`,
+      moved: originalGridX !== newGridX || originalGridY !== newGridY
+    });
+    
+    // 位置が変更された場合のみ処理
+    if (originalGridX !== newGridX || originalGridY !== newGridY) {
       const targetAlbum = findAlbumAtPosition(newGridX, newGridY, currentElement);
       
       if (targetAlbum) {
-        console.log('Swapping albums:', {
-          current: currentElement.dataset.albumName,
-          target: targetAlbum.dataset.albumName,
-          currentPos: `${newGridX},${newGridY}`,
-          targetToPos: `${originalGridX},${originalGridY}`
-        });
-        
-        targetAlbum.style.left = (originalGridX * 140) + 'px';
-        targetAlbum.style.top = (originalGridY * 140) + 'px';
-        targetAlbum.dataset.gridX = originalGridX;
-        targetAlbum.dataset.gridY = originalGridY;
-        
-        // 🆕 両方のアルバムを同時に保存
-        saveBothAlbumPositions(currentElement, targetAlbum);
+        console.log('🔄 Executing album swap...');
+        executeAlbumSwap(currentElement, targetAlbum, originalGridX, originalGridY);
       } else {
-        // 🆕 単一アルバムの場合
-        saveAlbumPosition(currentElement);
+        console.log('📍 Moving to empty position...');
+        moveToEmptyPosition(currentElement);
       }
-      
-      updateOccupiedPositions();
-      
-      delete currentElement.dataset.originalGridX;
-      delete currentElement.dataset.originalGridY;
-      
-      currentElement = null;
-      
-      setTimeout(() => {
-        updateAlbumList();
-        initializeHoverLinks();
-      }, 100);
+    } else {
+      console.log('📍 No position change, restoring original position...');
+      // 位置が変更されていない場合は占有位置を復元
+      occupiedPositions.set(`${originalGridX},${originalGridY}`, {
+        albumId: currentElement.dataset.id,
+        albumName: currentElement.dataset.albumName
+      });
     }
+    
+    // データ属性のクリーンアップ
+    delete currentElement.dataset.originalGridX;
+    delete currentElement.dataset.originalGridY;
+    
+    currentElement = null;
     isDragging = false;
+    
+    // UI更新を少し遅延させて確実に実行
+    setTimeout(() => {
+      updateAlbumList();
+      initializeHoverLinks();
+    }, 150);
   });
 }
 
-// 🆕 指定された位置にあるアルバムを見つける関数
+// アルバム交換処理を分離
+function executeAlbumSwap(movingAlbum, targetAlbum, originalGridX, originalGridY) {
+  // ターゲットアルバムを元の位置に移動
+  targetAlbum.style.left = (originalGridX * 140) + 'px';
+  targetAlbum.style.top = (originalGridY * 140) + 'px';
+  targetAlbum.dataset.gridX = originalGridX;
+  targetAlbum.dataset.gridY = originalGridY;
+  
+  // 占有位置マップを更新
+  const newPos = `${movingAlbum.dataset.gridX},${movingAlbum.dataset.gridY}`;
+  const originalPos = `${originalGridX},${originalGridY}`;
+  
+  occupiedPositions.set(newPos, {
+    albumId: movingAlbum.dataset.id,
+    albumName: movingAlbum.dataset.albumName
+  });
+  
+  occupiedPositions.set(originalPos, {
+    albumId: targetAlbum.dataset.id,
+    albumName: targetAlbum.dataset.albumName
+  });
+  
+  console.log('🔄 Swap completed:', {
+    moving: `${movingAlbum.dataset.albumName} → ${newPos}`,
+    target: `${targetAlbum.dataset.albumName} → ${originalPos}`
+  });
+  
+  // 両方のアルバムの位置を保存
+  saveBothAlbumPositions(movingAlbum, targetAlbum);
+}
+
+// 空の位置への移動処理を分離
+function moveToEmptyPosition(album) {
+  const newPos = `${album.dataset.gridX},${album.dataset.gridY}`;
+  
+  occupiedPositions.set(newPos, {
+    albumId: album.dataset.id,
+    albumName: album.dataset.albumName
+  });
+  
+  console.log('📍 Moved to empty position:', {
+    album: album.dataset.albumName,
+    position: newPos
+  });
+  
+  // 単一アルバムの位置を保存
+  saveAlbumPosition(album);
+}
+
+// 指定された位置にあるアルバムを見つける関数（改善版）
 function findAlbumAtPosition(gridX, gridY, excludeAlbum = null) {
+  const positionKey = `${gridX},${gridY}`;
+  
+  // まず占有位置マップをチェック
+  if (occupiedPositions.has(positionKey)) {
+    const occupant = occupiedPositions.get(positionKey);
+    console.log(`🎯 Position ${positionKey} is occupied by:`, occupant);
+  }
+  
+  // DOM要素からも確認（ダブルチェック）
   const albums = document.querySelectorAll('.album-jacket');
   for (let album of albums) {
     if (album === excludeAlbum) continue;
-    if (parseInt(album.dataset.gridX) === gridX && parseInt(album.dataset.gridY) === gridY) {
+    
+    const albumGridX = parseInt(album.dataset.gridX);
+    const albumGridY = parseInt(album.dataset.gridY);
+    
+    if (albumGridX === gridX && albumGridY === gridY) {
+      console.log(`🎯 Found album at position ${gridX},${gridY}:`, album.dataset.albumName);
       return album;
     }
   }
+  
   return null;
 }
 
-// 🆕 両方のアルバムの位置を同時に保存する関数
+// 両方のアルバムの位置を同時に保存する関数
 function saveBothAlbumPositions(album1, album2) {
   const layoutData = [
     {
@@ -804,58 +1029,10 @@ function saveBothAlbumPositions(album1, album2) {
     }
   });
   
-  const csrfToken = document.querySelector('[name="csrf-token"]')?.getAttribute('content') || 
-                   document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-  
-  if (!csrfToken) {
-    console.error('❌ CSRF token not found');
-    showMessage('セキュリティトークンが見つかりません', 'error');
-    return;
-  }
-  
-  console.log('📤 Sending batch position update via update_layout:', layoutData);
-  
-  fetch('/favorite_albums/update_layout', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': csrfToken,
-      'Accept': 'application/json'
-    },
-    body: JSON.stringify({
-      layout: layoutData
-    })
-  })
-  .then(response => {
-    console.log('📥 Batch response status:', response.status);
-    
-    if (!response.ok) {
-      return response.text().then(text => {
-        console.error('❌ Batch response text:', text);
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      });
-    }
-    return response.json();
-  })
-  .then(data => {
-    console.log('✅ Batch position save response:', data);
-    
-    if (data.status === 'success') {
-      console.log('💾 Both positions saved successfully');
-      showTemporaryIndicator(album1);
-      showTemporaryIndicator(album2);
-    } else {
-      console.error('❌ Batch server error:', data.message);
-      showMessage('位置の保存に失敗しました: ' + data.message, 'error');
-    }
-  })
-  .catch(error => {
-    console.error('❌ Batch position save error:', error);
-    showMessage('位置保存中にエラーが発生しました: ' + error.message, 'error');
-  });
+  performPositionSave(layoutData, [album1, album2]);
 }
 
-// 🆕 位置保存機能（単一アルバム用）
+// 位置保存機能（単一アルバム用）
 function saveAlbumPosition(albumElement) {
   const albumId = albumElement.dataset.id;
   const positionX = parseInt(albumElement.style.left);
@@ -863,35 +1040,27 @@ function saveAlbumPosition(albumElement) {
   const gridX = parseInt(albumElement.dataset.gridX);
   const gridY = parseInt(albumElement.dataset.gridY);
   
-  console.log(`🔄 Saving position for album ${albumId}:`, {
+  // データ検証
+  if (!albumId || isNaN(positionX) || isNaN(positionY) || isNaN(gridX) || isNaN(gridY)) {
+    console.error('❌ Invalid data for position save:', {
+      albumId, positionX, positionY, gridX, gridY
+    });
+    showMessage('位置データが無効です', 'error');
+    return;
+  }
+  
+  console.log(`💾 Saving position for album ${albumId}:`, {
     id: albumId,
     name: albumElement.dataset.albumName,
-    x: positionX,
-    y: positionY,
-    gridX: gridX,
-    gridY: gridY
+    pixel: { x: positionX, y: positionY },
+    grid: { x: gridX, y: gridY }
   });
-  
-  if (!albumId || isNaN(positionX) || isNaN(positionY)) {
-    console.error('❌ Invalid data for position save:', {
-      albumId, positionX, positionY
-    });
-    return;
-  }
-  
-  const csrfToken = document.querySelector('[name="csrf-token"]')?.getAttribute('content') || 
-                   document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-  
-  if (!csrfToken) {
-    console.error('❌ CSRF token not found');
-    showMessage('セキュリティトークンが見つかりません', 'error');
-    return;
-  }
   
   if (saveTimeout) {
     clearTimeout(saveTimeout);
   }
   
+  // 保存処理をデバウンス
   saveTimeout = setTimeout(() => {
     const layoutData = [{
       id: albumId,
@@ -901,49 +1070,74 @@ function saveAlbumPosition(albumElement) {
       grid_y: gridY
     }];
     
-    console.log('📤 Sending position update via update_layout:', layoutData);
-    
-    fetch('/favorite_albums/update_layout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': csrfToken,
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        layout: layoutData
-      })
-    })
-    .then(response => {
-      console.log('📥 Response status:', response.status);
-      
-      if (!response.ok) {
-        return response.text().then(text => {
-          console.error('❌ Response text:', text);
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        });
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('✅ Position save response:', data);
-      
-      if (data.status === 'success') {
-        console.log('💾 Position saved successfully for album:', albumId);
-        showTemporaryIndicator(albumElement);
-      } else {
-        console.error('❌ Server error:', data.message);
-        showMessage('位置の保存に失敗しました: ' + data.message, 'error');
-      }
-    })
-    .catch(error => {
-      console.error('❌ Position save error:', error);
-      showMessage('位置保存中にエラーが発生しました: ' + error.message, 'error');
-    });
+    performPositionSave(layoutData, [albumElement]);
   }, 100);
 }
 
-// 🆕 位置保存の視覚的フィードバック
+// 実際の保存処理を共通化
+function performPositionSave(layoutData, albumElements) {
+  const csrfToken = document.querySelector('[name="csrf-token"]')?.getAttribute('content') || 
+                   document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+  
+  if (!csrfToken) {
+    console.error('❌ CSRF token not found');
+    showMessage('セキュリティトークンが見つかりません', 'error');
+    return;
+  }
+  
+  console.log('📤 Sending position update:', layoutData);
+  
+  fetch('/favorite_albums/update_layout', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrfToken,
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify({ layout: layoutData })
+  })
+  .then(response => {
+    console.log('📥 Response status:', response.status);
+    
+    if (!response.ok) {
+      return response.text().then(text => {
+        console.error('❌ Server response:', text);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      });
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('✅ Position save response:', data);
+    
+    if (data.status === 'success') {
+      console.log('💾 Positions saved successfully');
+      albumElements.forEach(element => showTemporaryIndicator(element));
+    } else {
+      console.error('❌ Server error:', data.message);
+      showMessage('位置の保存に失敗しました: ' + data.message, 'error');
+    }
+  })
+  .catch(error => {
+    console.error('❌ Position save error:', error);
+    showMessage('位置保存中にエラーが発生しました: ' + error.message, 'error');
+    
+    // エラー時は位置を元に戻す
+    albumElements.forEach(element => {
+      if (element.dataset.originalGridX && element.dataset.originalGridY) {
+        const originalX = parseInt(element.dataset.originalGridX) * 140;
+        const originalY = parseInt(element.dataset.originalGridY) * 140;
+        element.style.left = originalX + 'px';
+        element.style.top = originalY + 'px';
+        element.dataset.gridX = element.dataset.originalGridX;
+        element.dataset.gridY = element.dataset.originalGridY;
+      }
+    });
+    updateOccupiedPositions();
+  });
+}
+
+// 位置保存の視覚的フィードバック
 function showTemporaryIndicator(albumElement) {
   const indicator = document.createElement('div');
   indicator.innerHTML = '<i class="fas fa-save"></i>';
@@ -966,7 +1160,7 @@ function showTemporaryIndicator(albumElement) {
     pointer-events: none;
   `;
   
-  albumElement.appendChild(indicator);
+  //albumElement.appendChild(indicator);
   
   setTimeout(() => indicator.style.opacity = '1', 50);
   
@@ -980,7 +1174,103 @@ function showTemporaryIndicator(albumElement) {
   }, 1500);
 }
 
-// アルバムリスト更新
+// 占有位置更新（Map使用でより詳細管理）
+function updateOccupiedPositions() {
+  occupiedPositions.clear();
+  const positionData = [];
+  const duplicateCheck = new Set();
+  
+  document.querySelectorAll('.album-jacket').forEach(album => {
+    const gridX = parseInt(album.dataset.gridX);
+    const gridY = parseInt(album.dataset.gridY);
+    
+    // 無効な座標のチェック
+    if (isNaN(gridX) || isNaN(gridY)) {
+      console.warn(`⚠️ Invalid coordinates for album ${album.dataset.albumName}:`, {
+        gridX, gridY, 
+        styleLeft: album.style.left, 
+        styleTop: album.style.top
+      });
+      
+      // スタイルから座標を復元
+      const styleX = parseInt(album.style.left) || 0;
+      const styleY = parseInt(album.style.top) || 0;
+      const correctedGridX = Math.round(styleX / 140);
+      const correctedGridY = Math.round(styleY / 140);
+      
+      album.dataset.gridX = correctedGridX;
+      album.dataset.gridY = correctedGridY;
+      
+      console.log(`🔧 Corrected coordinates:`, { 
+        gridX: correctedGridX, 
+        gridY: correctedGridY 
+      });
+    }
+    
+    const posKey = `${album.dataset.gridX},${album.dataset.gridY}`;
+    
+    // 重複チェック
+    if (duplicateCheck.has(posKey)) {
+      console.error(`❌ DUPLICATE POSITION DETECTED: ${posKey}`, {
+        album: album.dataset.albumName,
+        id: album.dataset.id
+      });
+      
+      // 重複を自動修正
+      const newPosition = findEmptyPosition();
+      album.style.left = newPosition.x + 'px';
+      album.style.top = newPosition.y + 'px';
+      album.dataset.gridX = newPosition.gridX;
+      album.dataset.gridY = newPosition.gridY;
+      
+      console.log(`🔧 Auto-corrected to:`, newPosition);
+    } else {
+      duplicateCheck.add(posKey);
+    }
+    
+    occupiedPositions.set(posKey, {
+      albumId: album.dataset.id,
+      albumName: album.dataset.albumName,
+      element: album
+    });
+    
+    positionData.push({
+      name: album.dataset.albumName,
+      id: album.dataset.id,
+      gridPos: posKey,
+      coordinates: { x: album.style.left, y: album.style.top }
+    });
+  });
+  
+  console.log('🗺️ Updated position map:', {
+    totalPositions: occupiedPositions.size,
+    positions: Array.from(occupiedPositions.keys()),
+    details: positionData
+  });
+}
+
+// 空いている位置を見つける関数
+function findEmptyPosition() {
+  for (let y = 0; y < 5; y++) {
+    for (let x = 0; x < 5; x++) {
+      const posKey = `${x},${y}`;
+      if (!occupiedPositions.has(posKey)) {
+        return {
+          x: x * 140,
+          y: y * 140,
+          gridX: x,
+          gridY: y
+        };
+      }
+    }
+  }
+  
+  // すべて埋まっている場合は(0,0)を返す（エラー回避）
+  console.warn('⚠️ No empty positions available, returning (0,0)');
+  return { x: 0, y: 0, gridX: 0, gridY: 0 };
+}
+
+// 🆕 アルバムリスト更新（番号対応版）
 function updateAlbumList() {
   const albums = Array.from(document.querySelectorAll('.album-jacket'));
   const albumList = document.getElementById('albumList');
@@ -995,6 +1285,7 @@ function updateAlbumList() {
     return;
   }
   
+  // 位置に基づいてソート（左上から右下へ）
   albums.sort((a, b) => {
     const aGridY = parseInt(a.dataset.gridY);
     const bGridY = parseInt(b.dataset.gridY);
@@ -1015,11 +1306,9 @@ function updateAlbumList() {
     
     albumHTML += `
       <div class="album-list-item" data-grid-position="${index}" data-spotify-id="${spotifyId}">
+        <span class="album-number">${index + 1}</span>
         <span class="album-title">${albumName}</span>
         <span class="artist-name">${artistName}</span>
-        <button class="btn btn-sm btn-outline-primary search-btn" onclick="highlightAlbum('${spotifyId}')">
-          <i class="fas fa-search"></i>
-        </button>
       </div>
     `;
   });
@@ -1086,18 +1375,6 @@ function removeAlbum(btn, spotifyId) {
   }
 }
 
-// 占有位置更新
-function updateOccupiedPositions() {
-  occupiedPositions.clear();
-  document.querySelectorAll('.album-jacket').forEach(album => {
-    const gridX = parseInt(album.dataset.gridX);
-    const gridY = parseInt(album.dataset.gridY);
-    occupiedPositions.add(`${gridX},${gridY}`);
-  });
-  
-  console.log('Updated occupied positions:', Array.from(occupiedPositions));
-}
-
 // SNS共有機能
 function shareToTwitter() {
   const albumCount = document.querySelectorAll('.album-jacket').length;
@@ -1140,7 +1417,7 @@ function copyLink() {
   });
 }
 
-// 🆕 一括削除機能
+// 一括削除機能
 function showBulkDeleteModal() {
   const modal = new bootstrap.Modal(document.getElementById('bulkDeleteModal'));
   const confirmText = document.getElementById('confirmText');

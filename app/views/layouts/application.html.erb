@@ -22,6 +22,8 @@
         font-family: 'Poppins', sans-serif;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         min-height: 100vh;
+        margin: 0; /* 🆕 bodyのマージンをリセット */
+        padding: 0; /* 🆕 bodyのパディングをリセット */
       }
 
       .navbar-brand {
@@ -43,10 +45,17 @@
         box-shadow: 0 -5px 30px rgba(0,0,0,0.1);
       }
 
+      /* 🆕 フッター全幅修正 */
       .footer {
         background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
         color: white;
         margin-top: auto;
+        width: 100vw; /* 🆕 ビューポート全幅 */
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
       }
 
       .btn-gradient {
@@ -107,6 +116,22 @@
         transform: translateY(-5px);
         box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
       }
+
+      /* 🆕 フッター内のテキスト色修正 */
+      .footer h5,
+      .footer h6 {
+        color: white;
+        font-weight: 600;
+      }
+
+      .footer .text-muted {
+        color: rgba(255, 255, 255, 0.8) !important;
+      }
+
+      .footer a.text-muted:hover {
+        color: rgba(255, 255, 255, 1) !important;
+        text-decoration: underline !important;
+      }
     </style>
   </head>
 
@@ -115,25 +140,21 @@
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
       <div class="container">
         <%= link_to root_path, class: "navbar-brand text-primary" do %>
-          <i class="fas fa-music me-2"#アイコン></i>TuneBox<% end %>
+          <i class="fas fa-music me-2"></i>TuneBox
+        <% end %>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navbarNav">
-
-
-      <ul class="navbar-nav me-auto">
-       <li class="nav-item">
-         <%= link_to favorite_albums_path, class: "nav-link #{'active' if current_page?(favorite_albums_path)}" do %>
-        <i class="fas fa-headphones me-1"></i>名盤リストを作る<% end %>
-        
-        <li class="nav-item">
-         <%= link_to "ライブ一覧", root_path, class: "nav-link #{'active' if current_page?(root_path)}" %>
-        </li>
-       </li>
-     </ul>
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <%= link_to favorite_albums_path, class: "nav-link #{'active' if current_page?(favorite_albums_path)}" do %>
+                <i class="fas fa-compact-disc me-1"></i>名盤リストを作る
+              <% end %>
+            </li>
+          </ul>
 
           <ul class="navbar-nav">
             <% if defined?(current_user) && current_user %>
@@ -180,7 +201,7 @@
       </div>
     </div>
 
-    <!-- フッター -->
+    <!-- 🆕 フッター修正版 -->
     <footer class="footer mt-5">
       <div class="container py-5">
         <div class="row">
@@ -248,11 +269,6 @@
           <div class="col-md-6">
             <p class="text-muted mb-0">
               &copy; 2025 TuneBox. All rights reserved.
-            </p>
-          </div>
-          <div class="col-md-6 text-md-end">
-            <p class="text-muted mb-0">
-              Made with <i class="fas fa-heart text-danger"></i> for Music Lovers
             </p>
           </div>
         </div>
