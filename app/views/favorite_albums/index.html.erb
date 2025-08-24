@@ -1548,61 +1548,145 @@ function copyLink() {
 
             // SNS共有機能
             function shareToSNS() {
-              const shareBtn = document.getElementById('shareSNSBtn');
+              // SNS共有モーダルを表示
+              showSNSShareModal();
+            }
+
+            // SNS共有モーダルを表示
+            function showSNSShareModal() {
+              const albumCount = document.querySelectorAll('.album-jacket').length;
+              const shareText = `私の名盤リスト（${albumCount}枚）を作成しました！ #TuneBox #名盤リスト #音楽好きと繋がりたい`;
+              const shareUrl = window.location.href;
               
-              // ボタンを無効化
-              shareBtn.disabled = true;
-              shareBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>共有中...';
+              const modalHTML = `
+                <div class="modal fade" id="snsShareModal" tabindex="-1" aria-labelledby="snsShareModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="snsShareModalLabel">
+                          <i class="fas fa-share-alt me-2"></i>SNSでシェア
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <p class="text-muted mb-4">お気に入りのSNSで名盤リストをシェアしましょう！</p>
+                        
+                        <div class="row g-3">
+                          <div class="col-6">
+                            <button type="button" class="btn btn-outline-primary w-100" onclick="shareToTwitter()">
+                              <i class="fab fa-twitter me-2"></i>X (Twitter)
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button type="button" class="btn btn-outline-danger w-100" onclick="shareToInstagram()">
+                              <i class="fab fa-instagram me-2"></i>Instagram
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button type="button" class="btn btn-outline-success w-100" onclick="shareToLine()">
+                              <i class="fab fa-line me-2"></i>LINE
+                            </button>
+                          </div>
+                          <div class="col-6">
+                            <button type="button" class="btn btn-outline-secondary w-100" onclick="copyShareText()">
+                              <i class="fas fa-copy me-2"></i>テキストコピー
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                          <label class="form-label">シェアテキスト</label>
+                          <textarea class="form-control" id="shareTextArea" rows="3" readonly>${shareText}
 
-              // 画像生成リクエストを送信
-              fetch('/favorite_albums/generate_share_image', {
-                method: 'GET',
-                headers: {
-                  'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
-                }
-              })
-              .then(response => {
-                if (!response.ok) {
-                  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.blob();
-              })
-              .then(blob => {
-                // 画像をBlob URLに変換
-                const url = window.URL.createObjectURL(blob);
-                
-                // Web Share APIを使用してSNS共有
-                if (navigator.share) {
-                  navigator.share({
-                    title: 'TuneBox - 私の名盤リスト',
-                    text: 'TuneBoxで作成した名盤リストをシェアします！',
-                    url: window.location.href
-                  }).then(() => {
-                    showMessage('SNS共有が完了しました！', 'success');
-                  }).catch((error) => {
-                    console.error('Share failed:', error);
-                    showMessage('SNS共有に失敗しました', 'error');
-                  });
-                } else {
-                  // Web Share APIがサポートされていない場合
-                  showMessage('お使いのブラウザではSNS共有がサポートされていません', 'info');
-                }
+${shareUrl}</textarea>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
 
-                // Blob URLをクリーンアップ
-                window.URL.revokeObjectURL(url);
+              // 既存のモーダルを削除
+              const existingModal = document.getElementById('snsShareModal');
+              if (existingModal) {
+                existingModal.remove();
+              }
 
-                // ボタンを元に戻す
-                shareBtn.disabled = false;
-                shareBtn.innerHTML = '<i class="fas fa-share-alt me-2"></i>SNSでシェア';
-              })
-              .catch(error => {
-                console.error('SNS share error:', error);
-                showMessage('SNS共有に失敗しました', 'error');
+              // 新しいモーダルを追加
+              document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-                // ボタンを元に戻す
-                shareBtn.disabled = false;
-                shareBtn.innerHTML = '<i class="fas fa-share-alt me-2"></i>SNSでシェア';
+              // モーダルを表示
+              const modal = new bootstrap.Modal(document.getElementById('snsShareModal'));
+              modal.show();
+            }
+
+            // X (Twitter)でシェア
+            function shareToTwitter() {
+              const albumCount = document.querySelectorAll('.album-jacket').length;
+              const text = `私の名盤リスト（${albumCount}枚）を作成しました！ #TuneBox #名盤リスト #音楽好きと繋がりたい`;
+              const url = window.location.href;
+              const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+              window.open(twitterUrl, '_blank', 'width=600,height=400');
+              
+              // モーダルを閉じる
+              const modal = bootstrap.Modal.getInstance(document.getElementById('snsShareModal'));
+              if (modal) modal.hide();
+            }
+
+            // Instagramでシェア
+            function shareToInstagram() {
+              const albumCount = document.querySelectorAll('.album-jacket').length;
+              const text = `私の名盤リスト（${albumCount}枚）を作成しました！ #TuneBox #名盤リスト #音楽好きと繋がりたい`;
+              const url = window.location.href;
+              
+              // モバイルの場合はInstagramアプリを開く
+              if (navigator.userAgent.includes('Mobile')) {
+                // Instagramアプリで開く（ただし、テキストの共有は制限がある）
+                window.open('instagram://app', '_blank');
+                showMessage('Instagramアプリが開きました。投稿テキストをコピーして使用してください。', 'info');
+              } else {
+                // デスクトップの場合はテキストをコピー
+                navigator.clipboard.writeText(`${text}\n\n${url}`).then(() => {
+                  showMessage('投稿テキストをクリップボードにコピーしました！Instagramで投稿してください。', 'success');
+                }).catch(() => {
+                  showMessage('テキストのコピーに失敗しました', 'error');
+                });
+              }
+              
+              // モーダルを閉じる
+              const modal = bootstrap.Modal.getInstance(document.getElementById('snsShareModal'));
+              if (modal) modal.hide();
+            }
+
+            // LINEでシェア
+            function shareToLine() {
+              const albumCount = document.querySelectorAll('.album-jacket').length;
+              const text = `私の名盤リスト（${albumCount}枚）を作成しました！`;
+              const url = window.location.href;
+              const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text + '\n\n' + url)}`;
+              window.open(lineUrl, '_blank');
+              
+              // モーダルを閉じる
+              const modal = bootstrap.Modal.getInstance(document.getElementById('snsShareModal'));
+              if (modal) modal.hide();
+            }
+
+            // シェアテキストをコピー
+            function copyShareText() {
+              const textArea = document.getElementById('shareTextArea');
+              textArea.select();
+              navigator.clipboard.writeText(textArea.value).then(() => {
+                showMessage('シェアテキストをクリップボードにコピーしました！', 'success');
+              }).catch(() => {
+                showMessage('テキストのコピーに失敗しました', 'error');
               });
+              
+              // モーダルを閉じる
+              const modal = bootstrap.Modal.getInstance(document.getElementById('snsShareModal'));
+              if (modal) modal.hide();
             }
 
 // 一括削除機能
