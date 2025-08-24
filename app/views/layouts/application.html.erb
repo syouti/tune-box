@@ -14,6 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "application" %>
     
     <!-- Bootstrap JavaScript CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -169,7 +170,7 @@
                   <li><%= link_to "マイページ", user_path(current_user), class: "dropdown-item" %></li>
                   <li><%= link_to "プロフィール編集", edit_user_path(current_user), class: "dropdown-item" %></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><%= link_to "ログアウト", logout_path, class: "dropdown-item text-danger", id: "logout-link", data: { method: :delete } %></li>
+                  <li><%= link_to "ログアウト", logout_path, method: :delete, class: "dropdown-item text-danger", id: "logout-link" %></li>
                 </ul>
               </li>
             <% else %>
