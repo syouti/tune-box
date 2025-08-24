@@ -53,3 +53,21 @@
     transform: translateX(-100%);
   }
 }
+
+/* プレビューボタン */
+.preview-btn {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  border: none;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+}
+
+.preview-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(23, 162, 184, 0.4);
+  color: white;
+}

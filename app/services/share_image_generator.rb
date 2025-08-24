@@ -21,19 +21,19 @@ class ShareImageGenerator
 
       # メイン画像を作成（キャンバス + アルバムリスト）
       main_image = ChunkyPNG::Image.new(@total_width, @total_height, ChunkyPNG::Color.rgb(102, 126, 234))
-      
+
       # ヘッダー部分を描画
       draw_header_section(main_image)
-      
+
       # キャンバス部分を描画
       draw_canvas_section(main_image)
-      
+
       # アルバムリスト部分を描画
       draw_album_list_section(main_image)
-      
+
       # フッター部分を描画
       draw_footer_section(main_image)
-      
+
       # 画像を保存
       main_image.save(filepath.to_s, :fast_rgba)
 
@@ -54,20 +54,20 @@ class ShareImageGenerator
     # ヘッダー背景（半透明の白）
     header_y = 0
     header_height = 80
-    
+
     # ヘッダー背景を描画
     (0...@total_width).each do |x|
       (header_y...header_y + header_height).each do |y|
         image[x, y] = ChunkyPNG::Color.rgba(255, 255, 255, 230) # 半透明の白
       end
     end
-    
+
     # タイトルテキスト（簡易版 - 実際のテキスト描画は複雑なので色のブロックで表現）
     title_x = 20
     title_y = 30
     title_width = 200
     title_height = 30
-    
+
     # タイトル背景（青色）
     (title_x...title_x + title_width).each do |x|
       (title_y...title_y + title_height).each do |y|
@@ -82,14 +82,14 @@ class ShareImageGenerator
     canvas_y = 80
     canvas_width = @canvas_width
     canvas_height = @canvas_height
-    
+
     # 黒い背景
     (canvas_x...canvas_x + canvas_width).each do |x|
       (canvas_y...canvas_y + canvas_height).each do |y|
         image[x, y] = ChunkyPNG::Color.rgb(0, 0, 0)
       end
     end
-    
+
     # グリッド線（白い線）
     grid_size = 140
     (1..4).each do |i|
@@ -98,24 +98,24 @@ class ShareImageGenerator
         image[x, y] = ChunkyPNG::Color.rgba(255, 255, 255, 50)
       end
     end
-    
+
     (1..4).each do |i|
       y = canvas_y + i * grid_size
       (canvas_x...canvas_x + canvas_width).each do |x|
         image[x, y] = ChunkyPNG::Color.rgba(255, 255, 255, 50)
       end
     end
-    
+
     # アルバムジャケットを配置（簡易版 - 色のブロックで表現）
     @favorite_albums.each_with_index do |album, index|
       if index < 25 # 最大25個まで
         grid_x = index % 5
         grid_y = (index / 5).floor
-        
+
         album_x = canvas_x + grid_x * grid_size + 10
         album_y = canvas_y + grid_y * grid_size + 10
         album_size = 120
-        
+
         # アルバムジャケット（グレーのブロック）
         (album_x...album_x + album_size).each do |x|
           (album_y...album_y + album_size).each do |y|
@@ -132,19 +132,19 @@ class ShareImageGenerator
     list_y = 80
     list_width = @list_width
     list_height = @canvas_height
-    
+
     # 黒い背景
     (list_x...list_x + list_width).each do |x|
       (list_y...list_y + list_height).each do |y|
         image[x, y] = ChunkyPNG::Color.rgb(0, 0, 0)
       end
     end
-    
+
     # アルバムリストの内容（簡易版）
     @favorite_albums.each_with_index do |album, index|
       if index < 25
         item_y = list_y + 20 + index * 25
-        
+
         # 番号（青色の小さなブロック）
         number_x = list_x + 20
         number_size = 20
@@ -153,7 +153,7 @@ class ShareImageGenerator
             image[x, y] = ChunkyPNG::Color.rgb(102, 126, 234)
           end
         end
-        
+
         # アルバム名（白いブロック）
         title_x = list_x + 50
         title_y = item_y
@@ -172,19 +172,19 @@ class ShareImageGenerator
     # フッター背景（濃いグレー）
     footer_y = @total_height - 60
     footer_height = 60
-    
+
     (0...@total_width).each do |x|
       (footer_y...footer_y + footer_height).each do |y|
         image[x, y] = ChunkyPNG::Color.rgb(44, 62, 80)
       end
     end
-    
+
     # フッターテキスト（白いブロック）
     footer_text_x = 20
     footer_text_y = footer_y + 20
     footer_text_width = 200
     footer_text_height = 20
-    
+
     (footer_text_x...footer_text_x + footer_text_width).each do |x|
       (footer_text_y...footer_text_y + footer_text_height).each do |y|
         image[x, y] = ChunkyPNG::Color.rgb(255, 255, 255)

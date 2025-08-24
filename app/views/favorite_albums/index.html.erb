@@ -63,8 +63,11 @@
           <% end %>
         </div>
 
-        <!-- SNS共有ボタン（右下） -->
+        <!-- プレビューとSNS共有ボタン（右下） -->
         <div class="canvas-bottom-right-btn">
+          <button class="btn btn-info preview-btn me-2" onclick="previewShareImage()" id="previewBtn">
+            <i class="fas fa-eye me-2"></i>プレビュー
+          </button>
           <button class="btn btn-success share-sns-btn" data-bs-toggle="modal" data-bs-target="#shareModal">
             <i class="fas fa-share-alt me-2"></i>SNSに共有
           </button>
@@ -1413,13 +1416,11 @@ function copyLink() {
 
             // プレビュー機能
             function previewShareImage() {
-              const previewBtn = document.getElementById('previewImageBtn');
-              const progressDiv = document.getElementById('previewProgress');
+              const previewBtn = document.getElementById('previewBtn');
 
-              // ボタンを無効化してプログレスを表示
+              // ボタンを無効化
               previewBtn.disabled = true;
               previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>生成中...';
-              progressDiv.style.display = 'block';
 
               // プレビュー生成リクエストを送信
               fetch('/favorite_albums/preview_share_image', {
@@ -1436,14 +1437,8 @@ function copyLink() {
               })
               .then(data => {
                 if (data.status === 'success') {
-                  // プレビュー画像を表示
-                  const previewImage = document.getElementById('previewImage');
-                  const previewArea = document.getElementById('previewArea');
-                  
-                  previewImage.src = data.image_data;
-                  previewArea.style.display = 'block';
-
-                  // 成功メッセージを表示
+                  // プレビュー画像を表示（モーダルで表示）
+                  showPreviewModal(data.image_data);
                   showMessage('プレビューの生成が完了しました！', 'success');
                 } else {
                   throw new Error(data.message || 'プレビュー生成に失敗しました');
@@ -1451,8 +1446,7 @@ function copyLink() {
 
                 // ボタンを元に戻す
                 previewBtn.disabled = false;
-                previewBtn.innerHTML = '<i class="fas fa-eye me-2"></i>プレビュー表示';
-                progressDiv.style.display = 'none';
+                previewBtn.innerHTML = '<i class="fas fa-eye me-2"></i>プレビュー';
               })
               .catch(error => {
                 console.error('Preview generation error:', error);
@@ -1460,9 +1454,52 @@ function copyLink() {
 
                 // ボタンを元に戻す
                 previewBtn.disabled = false;
-                previewBtn.innerHTML = '<i class="fas fa-eye me-2"></i>プレビュー表示';
-                progressDiv.style.display = 'none';
+                previewBtn.innerHTML = '<i class="fas fa-eye me-2"></i>プレビュー';
               });
+            }
+
+            // プレビューモーダルを表示
+            function showPreviewModal(imageData) {
+              // モーダルのHTMLを作成
+              const modalHTML = `
+                <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="previewModalLabel">
+                          <i class="fas fa-image me-2"></i>プレビュー
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body text-center">
+                        <img src="${imageData}" class="img-fluid border rounded" style="max-width: 100%; max-height: 500px;" alt="プレビュー画像">
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+                        <button type="button" class="btn btn-success" onclick="generateShareImage()">
+                          <i class="fas fa-download me-2"></i>画像をダウンロード
+                        </button>
+                        <button type="button" class="btn btn-info" onclick="shareToSNS()">
+                          <i class="fas fa-share-alt me-2"></i>SNSでシェア
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+
+              // 既存のモーダルを削除
+              const existingModal = document.getElementById('previewModal');
+              if (existingModal) {
+                existingModal.remove();
+              }
+
+              // 新しいモーダルを追加
+              document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+              // モーダルを表示
+              const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+              modal.show();
             }
 
             // 画像生成機能（ダウンロード用）

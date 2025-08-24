@@ -248,7 +248,7 @@ class FavoriteAlbumsController < ApplicationController
       # Base64エンコードしてJSONで返す
       image_data = File.binread(image_path)
       base64_image = Base64.strict_encode64(image_data)
-      
+
       render json: {
         status: 'success',
         image_data: "data:image/png;base64,#{base64_image}"
