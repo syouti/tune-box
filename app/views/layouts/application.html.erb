@@ -169,7 +169,7 @@
                   <li><%= link_to "マイページ", user_path(current_user), class: "dropdown-item" %></li>
                   <li><%= link_to "プロフィール編集", edit_user_path(current_user), class: "dropdown-item" %></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><%= link_to "ログアウト", logout_path, class: "dropdown-item text-danger", id: "logout-link" %></li>
+                  <li><%= link_to "ログアウト", logout_path, class: "dropdown-item text-danger", id: "logout-link", data: { method: :delete } %></li>
                 </ul>
               </li>
             <% else %>
@@ -313,8 +313,43 @@
         var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
           return new bootstrap.Dropdown(dropdownToggleEl);
         });
+        
+        // ログアウトリンクに直接イベントリスナーを追加
+        setTimeout(function() {
+          const logoutLink = document.getElementById('logout-link');
+          if (logoutLink) {
+            console.log('Logout link found:', logoutLink); // デバッグ用
+            logoutLink.addEventListener('click', function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Logout link clicked directly'); // デバッグ用
+              if (confirm('ログアウトしますか？')) {
+                fetch('/logout', {
+                  method: 'DELETE',
+                  headers: {
+                    'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
+                  }
+                })
+                .then(response => {
+                  console.log('Logout response:', response); // デバッグ用
+                  if (response.ok) {
+                    window.location.href = '/';
+                  }
+                })
+                .catch(error => {
+                  console.error('Logout error:', error);
+                  window.location.href = '/logout';
+                });
+              }
+            });
+          } else {
+            console.log('Logout link not found'); // デバッグ用
+          }
+        }, 1000);
         // ログイン・ログアウト・新規登録リンクのクリック処理
         document.addEventListener('click', function(e) {
+          console.log('Click event detected on:', e.target); // デバッグ用
+          
           // ログインリンクのクリック
           if (e.target.closest('#login-link')) {
             console.log('Login link clicked'); // デバッグ用
@@ -325,9 +360,10 @@
             console.log('Signup link clicked'); // デバッグ用
           }
           
-                    // ログアウトリンクのクリック
+          // ログアウトリンクのクリック
           if (e.target.closest('#logout-link')) {
             e.preventDefault();
+            e.stopPropagation();
             console.log('Logout link clicked'); // デバッグ用
             if (confirm('ログアウトしますか？')) {
               fetch('/logout', {
@@ -337,6 +373,7 @@
                 }
               })
               .then(response => {
+                console.log('Logout response:', response); // デバッグ用
                 if (response.ok) {
                   window.location.href = '/';
                 }
