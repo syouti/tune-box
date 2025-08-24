@@ -54,7 +54,7 @@ class ShareImageGenerator
     # ヘッダー背景（半透明の白）
     header_y = 0
     header_height = 80
-    
+
     (0...1100).each do |x|
       (header_y...header_y + header_height).each do |y|
         image[x, y] = ChunkyPNG::Color.rgba(255, 255, 255, 230)
@@ -66,7 +66,7 @@ class ShareImageGenerator
     title_y = 20
     title_width = 200
     title_height = 40
-    
+
     (title_x...title_x + title_width).each do |x|
       (title_y...title_y + title_height).each do |y|
         image[x, y] = ChunkyPNG::Color.rgb(102, 126, 234)
@@ -80,7 +80,7 @@ class ShareImageGenerator
     canvas_y = 100
     canvas_width = 700
     canvas_height = 500
-    
+
     # 黒い背景
     (canvas_x...canvas_x + canvas_width).each do |x|
       (canvas_y...canvas_y + canvas_height).each do |y|
@@ -96,7 +96,7 @@ class ShareImageGenerator
         image[x, y] = ChunkyPNG::Color.rgba(255, 255, 255, 50)
       end
     end
-    
+
     (1..4).each do |i|
       y = canvas_y + i * grid_size
       (canvas_x...canvas_x + canvas_width).each do |x|
@@ -104,7 +104,7 @@ class ShareImageGenerator
       end
     end
 
-    # アルバムジャケットを配置
+        # アルバムジャケットを配置
     @favorite_albums.each_with_index do |album, index|
       if index < 25 # 最大25個まで
         # 位置を計算
@@ -116,25 +116,33 @@ class ShareImageGenerator
           grid_y = (index / 5).floor
         end
 
-        album_x = canvas_x + grid_x * grid_size + 10
-        album_y = canvas_y + grid_y * grid_size + 10
-        album_size = 120
+        # 座標の範囲チェック
+        if grid_x >= 0 && grid_x < 5 && grid_y >= 0 && grid_y < 5
+          album_x = canvas_x + grid_x * grid_size + 10
+          album_y = canvas_y + grid_y * grid_size + 10
+          album_size = 120
 
-        # アルバムジャケット（グレーのブロック + 番号）
-        (album_x...album_x + album_size).each do |x|
-          (album_y...album_y + album_size).each do |y|
-            image[x, y] = ChunkyPNG::Color.rgb(100, 100, 100)
-          end
-        end
+          # 画像の範囲内かチェック
+          if album_x + album_size <= canvas_x + canvas_width && 
+             album_y + album_size <= canvas_y + canvas_height
 
-        # 番号を描画（小さな白い四角）
-        number_x = album_x + 5
-        number_y = album_y + 5
-        number_size = 20
-        
-        (number_x...number_x + number_size).each do |x|
-          (number_y...number_y + number_size).each do |y|
-            image[x, y] = ChunkyPNG::Color.rgb(255, 255, 255)
+            # アルバムジャケット（グレーのブロック + 番号）
+            (album_x...album_x + album_size).each do |x|
+              (album_y...album_y + album_size).each do |y|
+                image[x, y] = ChunkyPNG::Color.rgb(100, 100, 100)
+              end
+            end
+
+            # 番号を描画（小さな白い四角）
+            number_x = album_x + 5
+            number_y = album_y + 5
+            number_size = 20
+            
+            (number_x...number_x + number_size).each do |x|
+              (number_y...number_y + number_size).each do |y|
+                image[x, y] = ChunkyPNG::Color.rgb(255, 255, 255)
+              end
+            end
           end
         end
       end
@@ -147,7 +155,7 @@ class ShareImageGenerator
     list_y = 100
     list_width = 280
     list_height = 500
-    
+
     (list_x...list_x + list_width).each do |x|
       (list_y...list_y + list_height).each do |y|
         image[x, y] = ChunkyPNG::Color.rgb(0, 0, 0)
@@ -170,7 +178,7 @@ class ShareImageGenerator
     sorted_albums.each_with_index do |album, index|
       if index < 25
         item_y = list_y + 20 + index * 20
-        
+
         # 番号（青色の小さなブロック）
         number_x = list_x + 10
         number_size = 15
@@ -179,7 +187,7 @@ class ShareImageGenerator
             image[x, y] = ChunkyPNG::Color.rgb(102, 126, 234)
           end
         end
-        
+
         # アルバム名（白いブロック）
         title_x = list_x + 35
         title_y = item_y
@@ -190,7 +198,7 @@ class ShareImageGenerator
             image[x, y] = ChunkyPNG::Color.rgb(255, 255, 255)
           end
         end
-        
+
         # アーティスト名（グレーのブロック）
         artist_x = list_x + 35
         artist_y = item_y + 12
