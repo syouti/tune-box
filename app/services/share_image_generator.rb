@@ -5,39 +5,54 @@ class ShareImageGenerator
   def initialize(user, favorite_albums)
     @user = user
     @favorite_albums = favorite_albums
-    @canvas_width = 700
-    @canvas_height = 700
-    @list_width = 400
-    @total_width = @canvas_width + @list_width
-    @total_height = @canvas_height
   end
 
-      def generate
+  def generate
     begin
-      Rails.logger.info "Starting image generation for user #{@user.id}"
+      Rails.logger.info "Starting simple image generation for user #{@user.id}"
 
-      # ファイルパスを準備
       filepath = Rails.root.join('tmp', "share_image_#{@user.id}_#{Time.current.to_i}.png")
 
-      # メイン画像を作成（キャンバス + アルバムリスト）
-      main_image = ChunkyPNG::Image.new(@total_width, @total_height, ChunkyPNG::Color.rgb(102, 126, 234))
+      # シンプルな画像を作成（1100x700）
+      width = 1100
+      height = 700
+      main_image = ChunkyPNG::Image.new(width, height, ChunkyPNG::Color.rgb(102, 126, 234))
 
-      # ヘッダー部分を描画
-      draw_header_section(main_image)
+      # 背景を描画
+      (0...width).each do |x|
+        (0...height).each do |y|
+          main_image[x, y] = ChunkyPNG::Color.rgb(102, 126, 234)
+        end
+      end
 
-      # キャンバス部分を描画
-      draw_canvas_section(main_image)
+      # 中央に白い四角を描画（キャンバス風）
+      canvas_x = 50
+      canvas_y = 100
+      canvas_width = 700
+      canvas_height = 500
+      
+      (canvas_x...canvas_x + canvas_width).each do |x|
+        (canvas_y...canvas_y + canvas_height).each do |y|
+          main_image[x, y] = ChunkyPNG::Color.rgb(255, 255, 255)
+        end
+      end
 
-      # アルバムリスト部分を描画
-      draw_album_list_section(main_image)
-
-      # フッター部分を描画
-      draw_footer_section(main_image)
+      # 右側に黒い四角を描画（アルバムリスト風）
+      list_x = canvas_x + canvas_width + 20
+      list_y = canvas_y
+      list_width = 280
+      list_height = canvas_height
+      
+      (list_x...list_x + list_width).each do |x|
+        (list_y...list_y + list_height).each do |y|
+          main_image[x, y] = ChunkyPNG::Color.rgb(0, 0, 0)
+        end
+      end
 
       # 画像を保存
       main_image.save(filepath.to_s, :fast_rgba)
 
-      Rails.logger.info "Image created successfully"
+      Rails.logger.info "Simple image created successfully"
       Rails.logger.info "Image saved to: #{filepath}"
       filepath
 
@@ -45,368 +60,6 @@ class ShareImageGenerator
       Rails.logger.error "Image generation failed: #{e.message}"
       Rails.logger.error e.backtrace.join("\n")
       raise e
-    end
-  end
-
-  private
-
-  def draw_header_section(image)
-    # ヘッダー背景（半透明の白）
-    header_y = 0
-    header_height = 80
-
-    # ヘッダー背景を描画
-    (0...@total_width).each do |x|
-      (header_y...header_y + header_height).each do |y|
-        image[x, y] = ChunkyPNG::Color.rgba(255, 255, 255, 230) # 半透明の白
-      end
-    end
-
-    # タイトルテキスト（簡易版 - 実際のテキスト描画は複雑なので色のブロックで表現）
-    title_x = 20
-    title_y = 30
-    title_width = 200
-    title_height = 30
-
-    # タイトル背景（青色）
-    (title_x...title_x + title_width).each do |x|
-      (title_y...title_y + title_height).each do |y|
-        image[x, y] = ChunkyPNG::Color.rgb(102, 126, 234)
-      end
-    end
-  end
-
-  def draw_canvas_section(image)
-    # キャンバス背景（黒いグリッド）
-    canvas_x = 0
-    canvas_y = 80
-    canvas_width = @canvas_width
-    canvas_height = @canvas_height
-
-    # 黒い背景
-    (canvas_x...canvas_x + canvas_width).each do |x|
-      (canvas_y...canvas_y + canvas_height).each do |y|
-        image[x, y] = ChunkyPNG::Color.rgb(0, 0, 0)
-      end
-    end
-
-    # グリッド線（白い線）
-    grid_size = 140
-    (1..4).each do |i|
-      x = i * grid_size
-      (canvas_y...canvas_y + canvas_height).each do |y|
-        image[x, y] = ChunkyPNG::Color.rgba(255, 255, 255, 50)
-      end
-    end
-
-    (1..4).each do |i|
-      y = canvas_y + i * grid_size
-      (canvas_x...canvas_x + canvas_width).each do |x|
-        image[x, y] = ChunkyPNG::Color.rgba(255, 255, 255, 50)
-      end
-    end
-
-    # アルバムジャケットを配置（簡易版 - 色のブロックで表現）
-    @favorite_albums.each_with_index do |album, index|
-      if index < 25 # 最大25個まで
-        grid_x = index % 5
-        grid_y = (index / 5).floor
-
-        album_x = canvas_x + grid_x * grid_size + 10
-        album_y = canvas_y + grid_y * grid_size + 10
-        album_size = 120
-
-        # アルバムジャケット（グレーのブロック）
-        (album_x...album_x + album_size).each do |x|
-          (album_y...album_y + album_size).each do |y|
-            image[x, y] = ChunkyPNG::Color.rgb(100, 100, 100)
-          end
-        end
-      end
-    end
-  end
-
-  def draw_album_list_section(image)
-    # アルバムリスト背景（黒）
-    list_x = @canvas_width
-    list_y = 80
-    list_width = @list_width
-    list_height = @canvas_height
-
-    # 黒い背景
-    (list_x...list_x + list_width).each do |x|
-      (list_y...list_y + list_height).each do |y|
-        image[x, y] = ChunkyPNG::Color.rgb(0, 0, 0)
-      end
-    end
-
-    # アルバムリストの内容（簡易版）
-    @favorite_albums.each_with_index do |album, index|
-      if index < 25
-        item_y = list_y + 20 + index * 25
-
-        # 番号（青色の小さなブロック）
-        number_x = list_x + 20
-        number_size = 20
-        (number_x...number_x + number_size).each do |x|
-          (item_y...item_y + number_size).each do |y|
-            image[x, y] = ChunkyPNG::Color.rgb(102, 126, 234)
-          end
-        end
-
-        # アルバム名（白いブロック）
-        title_x = list_x + 50
-        title_y = item_y
-        title_width = 150
-        title_height = 15
-        (title_x...title_x + title_width).each do |x|
-          (title_y...title_y + title_height).each do |y|
-            image[x, y] = ChunkyPNG::Color.rgb(255, 255, 255)
-          end
-        end
-      end
-    end
-  end
-
-  def draw_footer_section(image)
-    # フッター背景（濃いグレー）
-    footer_y = @total_height - 60
-    footer_height = 60
-
-    (0...@total_width).each do |x|
-      (footer_y...footer_y + footer_height).each do |y|
-        image[x, y] = ChunkyPNG::Color.rgb(44, 62, 80)
-      end
-    end
-
-    # フッターテキスト（白いブロック）
-    footer_text_x = 20
-    footer_text_y = footer_y + 20
-    footer_text_width = 200
-    footer_text_height = 20
-
-    (footer_text_x...footer_text_x + footer_text_width).each do |x|
-      (footer_text_y...footer_text_y + footer_text_height).each do |y|
-        image[x, y] = ChunkyPNG::Color.rgb(255, 255, 255)
-      end
-    end
-  end
-
-  def draw_canvas_section(image)
-    # キャンバス背景（黒いグリッド）
-    canvas_bg = MiniMagick::Image.new("#{@canvas_width}x#{@canvas_height}")
-    canvas_bg.format "png"
-
-    # 黒い背景を作成
-    canvas_bg.combine_options do |c|
-      c.fill "black"
-      c.draw "rectangle 0,0 #{@canvas_width},#{@canvas_height}"
-    end
-
-    # グリッド線を描画
-    draw_grid_lines(canvas_bg)
-
-    # アルバムジャケットを配置
-    draw_album_jackets(canvas_bg)
-
-    # メイン画像に合成
-    image.composite(canvas_bg) do |c|
-      c.geometry "+0+80" # ヘッダー分をオフセット
-    end
-  end
-
-  def draw_grid_lines(canvas_bg)
-    # グリッド線を描画
-    canvas_bg.combine_options do |c|
-      c.stroke "rgba(255,255,255,0.2)"
-      c.strokewidth "1"
-
-      # 縦線
-      (1..4).each do |i|
-        x = i * 140
-        c.draw "line #{x},0 #{x},#{@canvas_height}"
-      end
-
-      # 横線
-      (1..4).each do |i|
-        y = i * 140
-        c.draw "line 0,#{y} #{@canvas_width},#{y}"
-      end
-    end
-  end
-
-  def draw_album_jackets(canvas_bg)
-    @favorite_albums.each_with_index do |album, index|
-      # アルバムの位置を計算
-      if album.position_x.present? && album.position_y.present?
-        x = album.position_x
-        y = album.position_y
-      else
-        grid_x = index % 5
-        grid_y = (index / 5).floor
-        x = grid_x * 140
-        y = grid_y * 140
-      end
-
-      # アルバムジャケット画像をダウンロードして配置
-      begin
-        album_image = download_album_image(album.image_url)
-        if album_image
-          # 140x140にリサイズ
-          album_image.resize "140x140"
-
-          # キャンバスに配置
-          canvas_bg.composite(album_image) do |c|
-            c.geometry "+#{x}+#{y}"
-          end
-        end
-      rescue => e
-        Rails.logger.error "Failed to download album image: #{e.message}"
-      end
-    end
-  end
-
-  def draw_album_list_section(image)
-    # アルバムリスト背景
-    list_bg = MiniMagick::Image.new("#{@list_width}x#{@canvas_height}")
-    list_bg.format "png"
-
-    # 黒い背景を作成
-    list_bg.combine_options do |c|
-      c.fill "#000000"
-      c.draw "rectangle 0,0 #{@list_width},#{@canvas_height}"
-    end
-
-    # アルバムリストの内容を描画
-    draw_album_list_content(list_bg)
-
-    # メイン画像に合成
-    image.composite(list_bg) do |c|
-      c.geometry "+#{@canvas_width}+80" # キャンバスの右側、ヘッダー分をオフセット
-    end
-  end
-
-  def draw_album_list_content(list_bg)
-    # ヘッダー
-    list_bg.combine_options do |c|
-      c.fill "white"
-      c.font "Arial-Bold"
-      c.pointsize "24"
-      c.draw "text 20,40 'アルバムリスト'"
-    end
-
-    # アルバムリスト
-    sorted_albums = @favorite_albums.sort_by do |album|
-      if album.position_x.present? && album.position_y.present?
-        grid_y = (album.position_y / 140).to_i
-        grid_x = (album.position_x / 140).to_i
-      else
-        index = @favorite_albums.index(album)
-        grid_y = (index / 5).floor
-        grid_x = index % 5
-      end
-      [grid_y, grid_x]
-    end
-
-    sorted_albums.each_with_index do |album, index|
-      y_position = 80 + (index * 25)
-
-      # 番号
-      list_bg.combine_options do |c|
-        c.fill "#667eea"
-        c.font "Arial-Bold"
-        c.pointsize "14"
-        c.draw "text 20,#{y_position} '#{index + 1}'"
-      end
-
-      # アルバム名
-      list_bg.combine_options do |c|
-        c.fill "white"
-        c.font "Arial"
-        c.pointsize "12"
-        # 長いタイトルは省略
-        title = album.name.length > 20 ? album.name[0..19] + "..." : album.name
-        c.draw "text 50,#{y_position} '#{title}'"
-      end
-
-      # アーティスト名
-      list_bg.combine_options do |c|
-        c.fill "#cccccc"
-        c.font "Arial"
-        c.pointsize "10"
-        # 長いアーティスト名は省略
-        artist = album.artist.length > 15 ? album.artist[0..14] + "..." : album.artist
-        c.draw "text 50,#{y_position + 15} '#{artist}'"
-      end
-    end
-  end
-
-  def draw_header(image)
-    # ヘッダー背景
-    header_bg = MiniMagick::Image.new("#{@total_width}x80")
-    header_bg.format "png"
-
-    # 半透明の白い背景
-    header_bg.combine_options do |c|
-      c.fill "rgba(255,255,255,0.95)"
-      c.draw "rectangle 0,0 #{@total_width},80"
-    end
-
-    # タイトル
-    header_bg.combine_options do |c|
-      c.fill "#667eea"
-      c.font "Arial-Bold"
-      c.pointsize "32"
-      c.draw "text 20,50 'TuneBox'"
-    end
-
-    # ユーザー名
-    header_bg.combine_options do |c|
-      c.fill "#333333"
-      c.font "Arial"
-      c.pointsize "18"
-      c.draw "text 20,75 '#{@user.name}の名盤リスト'"
-    end
-
-    # メイン画像に合成
-    image.composite(header_bg) do |c|
-      c.geometry "+0+0"
-    end
-  end
-
-  def draw_footer(image)
-    # フッター背景を直接描画
-    image.combine_options do |c|
-      c.fill "#2c3e50"
-      c.draw "rectangle 0,#{@total_height - 60} #{@total_width},#{@total_height}"
-
-      # フッターテキスト
-      c.fill "white"
-      c.font "Arial"
-      c.pointsize "14"
-      c.draw "text 20,#{@total_height - 25} 'Generated by TuneBox'"
-      c.draw "text 20,#{@total_height - 10} '#{Time.current.strftime('%Y年%m月%d日')}'"
-    end
-  end
-
-  def download_album_image(image_url)
-    return nil if image_url.blank?
-
-    begin
-      # 画像をダウンロード
-      downloaded_image = URI.open(image_url)
-      temp_file = Tempfile.new(['album_image', '.jpg'])
-      temp_file.binmode
-      temp_file.write(downloaded_image.read)
-      temp_file.close
-
-      # MiniMagickで画像を読み込み
-      MiniMagick::Image.open(temp_file.path)
-    rescue => e
-      Rails.logger.error "Failed to download image from #{image_url}: #{e.message}"
-      nil
-    ensure
-      temp_file&.unlink
     end
   end
 end
