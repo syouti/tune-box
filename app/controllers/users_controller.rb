@@ -8,7 +8,7 @@ class UsersController < ApplicationController
 
     if @user.save
       session[:user_id] = @user.id
-      redirect_to root_path, notice: 'アカウントが正常に作成されました！TuneBoxへようこそ！'
+      redirect_to root_path, notice: 'アカウントが正常に作成されましたTuneBoxへようこそ'
     else
       render :new
     end

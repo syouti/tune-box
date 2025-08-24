@@ -309,82 +309,108 @@
 
       // お気に入り機能のJavaScript
       document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing Bootstrap dropdowns...');
+        
         // Bootstrapドロップダウンの初期化
         var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+        console.log('Found dropdown elements:', dropdownElementList.length);
+        
         var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+          console.log('Initializing dropdown for:', dropdownToggleEl);
+          
+          // ドロップダウンのクリックイベントを追加
+          dropdownToggleEl.addEventListener('click', function(e) {
+            console.log('Dropdown clicked!', e);
+            console.log('Dropdown element:', this);
+            console.log('Bootstrap object:', window.bootstrap);
+            
+            // 手動でドロップダウンを制御
+            const dropdownMenu = this.nextElementSibling;
+            if (dropdownMenu && dropdownMenu.classList.contains('dropdown-menu')) {
+              const isVisible = dropdownMenu.style.display !== 'none' && dropdownMenu.classList.contains('show');
+              
+              if (isVisible) {
+                // ドロップダウンを閉じる
+                dropdownMenu.style.display = 'none';
+                dropdownMenu.classList.remove('show');
+                this.setAttribute('aria-expanded', 'false');
+              } else {
+                // ドロップダウンを開く
+                dropdownMenu.style.display = 'block';
+                dropdownMenu.classList.add('show');
+                this.setAttribute('aria-expanded', 'true');
+              }
+              
+              console.log('Dropdown toggled, display:', dropdownMenu.style.display);
+            }
+          });
+          
           return new bootstrap.Dropdown(dropdownToggleEl);
         });
         
-        // ログアウトリンクに直接イベントリスナーを追加
-        setTimeout(function() {
-          const logoutLink = document.getElementById('logout-link');
-          if (logoutLink) {
-            console.log('Logout link found:', logoutLink); // デバッグ用
-            logoutLink.addEventListener('click', function(e) {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Logout link clicked directly'); // デバッグ用
-              if (confirm('ログアウトしますか？')) {
-                fetch('/logout', {
-                  method: 'DELETE',
-                  headers: {
-                    'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
-                  }
-                })
-                .then(response => {
-                  console.log('Logout response:', response); // デバッグ用
-                  if (response.ok) {
-                    window.location.href = '/';
-                  }
-                })
-                .catch(error => {
-                  console.error('Logout error:', error);
-                  window.location.href = '/logout';
-                });
-              }
-            });
-          } else {
-            console.log('Logout link not found'); // デバッグ用
-          }
-        }, 1000);
-        // ログイン・ログアウト・新規登録リンクのクリック処理
-        document.addEventListener('click', function(e) {
-          console.log('Click event detected on:', e.target); // デバッグ用
-          
-          // ログインリンクのクリック
-          if (e.target.closest('#login-link')) {
-            console.log('Login link clicked'); // デバッグ用
-          }
-          
-          // 新規登録リンクのクリック
-          if (e.target.closest('#signup-link')) {
-            console.log('Signup link clicked'); // デバッグ用
-          }
-          
-          // ログアウトリンクのクリック
-          if (e.target.closest('#logout-link')) {
+        console.log('Bootstrap dropdowns initialized:', dropdownList.length);
+        console.log('Bootstrap object available:', typeof window.bootstrap !== 'undefined');
+        console.log('Bootstrap Dropdown available:', typeof window.bootstrap?.Dropdown !== 'undefined');
+        
+        // ドロップダウンメニューの要素を確認
+        const dropdownMenu = document.querySelector('.dropdown-menu');
+        if (dropdownMenu) {
+                  console.log('Dropdown menu found:', dropdownMenu);
+        console.log('Dropdown menu display:', window.getComputedStyle(dropdownMenu).display);
+        console.log('Dropdown menu visibility:', window.getComputedStyle(dropdownMenu).visibility);
+      } else {
+        console.log('Dropdown menu not found');
+      }
+      
+      // ドロップダウンの外側をクリックした時に閉じる
+      document.addEventListener('click', function(e) {
+        const dropdownToggle = document.querySelector('.dropdown-toggle');
+        const dropdownMenu = document.querySelector('.dropdown-menu');
+        
+        if (dropdownToggle && dropdownMenu && !dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+          dropdownMenu.style.display = 'none';
+          dropdownMenu.classList.remove('show');
+          dropdownToggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+        
+        // ログアウトリンクの処理
+        const logoutLink = document.getElementById('logout-link');
+        if (logoutLink) {
+          logoutLink.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Logout link clicked'); // デバッグ用
+            console.log('Logout link clicked');
             if (confirm('ログアウトしますか？')) {
-              fetch('/logout', {
+              // リンクのhref属性から正しいURLを取得
+              const logoutUrl = this.getAttribute('href');
+              console.log('Logout URL:', logoutUrl);
+              
+              fetch(logoutUrl, {
                 method: 'DELETE',
                 headers: {
                   'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
                 }
               })
               .then(response => {
-                console.log('Logout response:', response); // デバッグ用
-                if (response.ok) {
+                console.log('Logout response:', response);
+                if (response.ok || response.redirected) {
                   window.location.href = '/';
+                } else {
+                  console.error('Logout failed:', response.status);
                 }
               })
               .catch(error => {
                 console.error('Logout error:', error);
-                window.location.href = '/logout';
+                // エラーが発生した場合は、通常のリンクとして動作させる
+                window.location.href = logoutUrl;
               });
             }
-          }
+          });
+        }
+        
+        // お気に入りボタンとコレクション削除ボタンの処理
+        document.addEventListener('click', function(e) {
 
           if (e.target.closest('.favorite-btn')) {
             e.preventDefault();
@@ -481,39 +507,7 @@
           }, 3000);
         }
 
-        // ログアウトリンクのクリックイベントを確実に処理
-        document.addEventListener('DOMContentLoaded', function() {
-          const logoutLink = document.getElementById('logout-link');
-          if (logoutLink) {
-            logoutLink.addEventListener('click', function(e) {
-              e.preventDefault();
-              e.stopPropagation();
-              
-              console.log('Logout link clicked, submitting form...');
-              
-              // Rails UJSの方法でDELETEリクエストを送信
-              const form = document.createElement('form');
-              form.method = 'POST';
-              form.action = this.href;
-              form.style.display = 'none';
-              
-              const methodInput = document.createElement('input');
-              methodInput.type = 'hidden';
-              methodInput.name = '_method';
-              methodInput.value = 'DELETE';
-              
-              const csrfInput = document.createElement('input');
-              csrfInput.type = 'hidden';
-              csrfInput.name = 'authenticity_token';
-              csrfInput.value = document.querySelector('[name="csrf-token"]').getAttribute('content');
-              
-              form.appendChild(methodInput);
-              form.appendChild(csrfInput);
-              document.body.appendChild(form);
-              form.submit();
-            });
-          }
-        });
+
 
         // ページ読み込み時にお気に入り状態をチェック
         checkFavoriteStatus();
