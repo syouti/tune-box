@@ -14,9 +14,9 @@ class ShareImageGenerator
 
       filepath = Rails.root.join('tmp', "share_image_#{@user.id}_#{Time.current.to_i}.png")
 
-      # メイン画像を作成（1100x700）
+      # メイン画像を作成（1100x900）
       width = 1100
-      height = 700
+      height = 900  # キャンバスの高さに合わせて全体の高さを増加
       main_image = ChunkyPNG::Image.new(width, height, ChunkyPNG::Color.rgb(102, 126, 234))
 
       # 背景を描画
@@ -76,11 +76,11 @@ class ShareImageGenerator
   end
 
   def draw_canvas(image)
-    # キャンバス背景（黒いグリッド）
-    canvas_x = 50
-    canvas_y = 100
-    canvas_width = 700
-    canvas_height = 500
+          # キャンバス背景（黒いグリッド）
+      canvas_x = 50
+      canvas_y = 100
+      canvas_width = 700
+      canvas_height = 700  # 5行分のアルバムを表示するために高さを増加
 
     # 黒い背景
     (canvas_x...canvas_x + canvas_width).each do |x|
@@ -109,7 +109,7 @@ class ShareImageGenerator
     Rails.logger.info "Drawing #{@favorite_albums.count} albums on canvas"
     @favorite_albums.each_with_index do |album, index|
       Rails.logger.info "Album #{index + 1}: #{album.name} at position (#{album.position_x}, #{album.position_y})"
-      
+
       if index < 25 # 最大25個まで
         # 位置を計算
         if album.position_x.present? && album.position_y.present?
@@ -166,7 +166,7 @@ class ShareImageGenerator
     list_x = 800
     list_y = 100
     list_width = 280
-    list_height = 500
+    list_height = 700  # キャンバスと同じ高さに調整
 
     (list_x...list_x + list_width).each do |x|
       (list_y...list_y + list_height).each do |y|
