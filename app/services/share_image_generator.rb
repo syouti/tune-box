@@ -12,30 +12,40 @@ class ShareImageGenerator
     @total_height = @canvas_height
   end
 
-          def generate
+  def generate
     begin
       Rails.logger.info "Starting image generation for user #{@user.id}"
-      
+
       # ファイルパスを準備
       filepath = Rails.root.join('tmp', "share_image_#{@user.id}_#{Time.current.to_i}.png")
-      
+
       # シンプルな画像を作成（テスト用）
-      MiniMagick::Tool::Convert.new do |convert|
-        convert.size "800x600"
-        convert.xc "#667eea"
-        convert.fill "white"
-        convert.font "Arial"
-        convert.pointsize "24"
-        convert.draw "text 50,100 'TuneBox Share Image'"
-        convert.draw "text 50,150 'User: #{@user.name}'"
-        convert.draw "text 50,200 'Albums: #{@favorite_albums.count}'"
-        convert << filepath.to_s
-      end.call
+      image = MiniMagick::Image.new("800x600")
+      image.format "png"
       
+      # 背景色を設定
+      image.combine_options do |c|
+        c.fill "#667eea"
+        c.draw "rectangle 0,0 800,600"
+      end
+      
+      # テキストを追加
+      image.combine_options do |c|
+        c.fill "white"
+        c.font "Arial"
+        c.pointsize "24"
+        c.draw "text 50,100 'TuneBox Share Image'"
+        c.draw "text 50,150 'User: #{@user.name}'"
+        c.draw "text 50,200 'Albums: #{@favorite_albums.count}'"
+      end
+      
+      # 画像を保存
+      image.write(filepath)
+
       Rails.logger.info "Image created successfully"
       Rails.logger.info "Image saved to: #{filepath}"
       filepath
-      
+
     rescue => e
       Rails.logger.error "Image generation failed: #{e.message}"
       Rails.logger.error e.backtrace.join("\n")
