@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  get "guest_albums/index"
+
   root 'home#index'
   get "home/index"
   get "albums/index"
@@ -33,14 +33,7 @@ Rails.application.routes.draw do
     end
   end
 
-  # ゲストアルバム関連
-  resources :guest_albums, only: [:index] do
-    collection do
-      post :toggle
-      patch :update_positions
-      post :save_to_account
-    end
-  end
+
 
   # ユーザー認証関連
   get 'signup', to: 'users#new'

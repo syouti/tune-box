@@ -1,9 +1,14 @@
 # app/controllers/favorite_albums_controller.rb
 class FavoriteAlbumsController < ApplicationController
-  before_action :require_login
+  before_action :require_login_or_guest
 
   def index
-    @favorite_albums = current_user.favorite_albums.order(:created_at)
+    if user_signed_in?
+      @favorite_albums = current_user.favorite_albums.order(:created_at)
+    else
+      # ゲストユーザーの場合は空の配列
+      @favorite_albums = []
+    end
 
     respond_to do |format|
       format.html
@@ -13,6 +18,15 @@ class FavoriteAlbumsController < ApplicationController
 
   # 🆕 検索ページからの追加/削除用のtoggleメソッド
   def toggle
+    # ゲストユーザーの場合は保存を促す
+    unless user_signed_in?
+      render json: {
+        status: 'guest_mode',
+        message: '保存するにはログインが必要です'
+      }, status: 401
+      return
+    end
+
     current_count = current_user.favorite_albums.count
 
     # パラメータのバリデーション

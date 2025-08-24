@@ -8,7 +8,7 @@ class SessionsController < ApplicationController
 
     if user && user.authenticate(params[:session][:password])
       session[:user_id] = user.id
-      redirect_to root_path, notice: "#{user.name}さん、おかえりなさい！"
+      redirect_to favorite_albums_path, notice: "#{user.name}さん、おかえりなさい！キャンバスページに移動しました。"
     else
       flash.now[:alert] = 'メールアドレスまたはパスワードが正しくありません。'
       render :new
