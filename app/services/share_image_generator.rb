@@ -134,17 +134,17 @@ class ShareImageGenerator
           if album_x + album_size <= canvas_x + canvas_width &&
              album_y + album_size <= canvas_y + canvas_height
 
-            # アルバムジャケット（グレーのブロック + 番号）
+            # アルバムジャケット（赤いブロックで目立つように）
             (album_x...album_x + album_size).each do |x|
               (album_y...album_y + album_size).each do |y|
-                image[x, y] = ChunkyPNG::Color.rgb(100, 100, 100)
+                image[x, y] = ChunkyPNG::Color.rgb(255, 0, 0)  # 赤色で目立つように
               end
             end
 
-            # 番号を描画（小さな白い四角）
-            number_x = album_x + 5
-            number_y = album_y + 5
-            number_size = 20
+            # 番号を描画（大きな白い四角）
+            number_x = album_x + 10
+            number_y = album_y + 10
+            number_size = 30
 
             (number_x...number_x + number_size).each do |x|
               (number_y...number_y + number_size).each do |y|

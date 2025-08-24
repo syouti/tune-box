@@ -261,12 +261,12 @@ class FavoriteAlbumsController < ApplicationController
         status: 'error',
         message: "プレビュー生成に失敗しました: #{e.message}"
       }, status: 500
-    ensure
-      # 一時ファイルを削除
-      if defined?(image_path) && image_path && File.exist?(image_path)
-        File.delete(image_path)
-        Rails.logger.info "Temporary preview file deleted: #{image_path}"
-      end
+                  ensure
+                # 一時ファイルを削除（デバッグ中はコメントアウト）
+                # if defined?(image_path) && image_path && File.exist?(image_path)
+                #   File.delete(image_path)
+                #   Rails.logger.info "Temporary preview file deleted: #{image_path}"
+                # end
     end
   end
 
