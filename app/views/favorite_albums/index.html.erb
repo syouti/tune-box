@@ -1450,7 +1450,7 @@ function copyLink() {
                             <div class="canvas-section">
                               <div class="canvas-wrapper">
                                 <div class="collection-canvas" id="previewCanvas" style="width: 700px; height: 700px;">
-                                  ${canvas.innerHTML.replace(/<button[^>]*delete-btn[^>]*>.*?<\/button>/g, '')}
+                                  ${canvas.innerHTML}
                                 </div>
                               </div>
                             </div>
@@ -1487,6 +1487,14 @@ function copyLink() {
               // モーダルを表示
               const modal = new bootstrap.Modal(document.getElementById('previewModal'));
               modal.show();
+              
+              // モーダル内の削除ボタンを非表示にする
+              setTimeout(() => {
+                const deleteButtons = document.querySelectorAll('#previewModal .delete-btn');
+                deleteButtons.forEach(btn => {
+                  btn.style.display = 'none';
+                });
+              }, 100);
             }
 
             // 画像生成機能（ダウンロード用）
