@@ -238,11 +238,11 @@ class FavoriteAlbumsController < ApplicationController
   def generate_share_image
     begin
       Rails.logger.info "Starting image generation request"
-      
+
       # 画像生成サービスを呼び出し
       generator = ShareImageGenerator.new(current_user, current_user.favorite_albums)
       image_path = generator.generate
-      
+
       Rails.logger.info "Image generated successfully: #{image_path}"
 
       # 画像ファイルをレスポンスとして送信

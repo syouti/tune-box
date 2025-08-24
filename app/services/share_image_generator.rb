@@ -12,39 +12,27 @@ class ShareImageGenerator
     @total_height = @canvas_height
   end
 
-    def generate
+      def generate
     begin
       Rails.logger.info "Starting image generation for user #{@user.id}"
       
       # シンプルな画像を作成（テスト用）
-      main_image = MiniMagick::Image.new("800x600")
-      main_image.format "png"
-      
-      Rails.logger.info "Created test image: 800x600"
-
-      # シンプルな背景を作成
-      main_image.combine_options do |c|
-        c.fill "#667eea"
-        c.draw "rectangle 0,0 800,600"
+      main_image = MiniMagick::Tool::Convert.new do |convert|
+        convert.size "800x600"
+        convert.xc "#667eea"
+        convert.fill "white"
+        convert.font "Arial"
+        convert.pointsize "24"
+        convert.draw "text 50,100 'TuneBox Share Image'"
+        convert.draw "text 50,150 'User: #{@user.name}'"
+        convert.draw "text 50,200 'Albums: #{@favorite_albums.count}'"
+        convert << Rails.root.join('tmp', "share_image_#{@user.id}_#{Time.current.to_i}.png").to_s
       end
-      Rails.logger.info "Background created"
-
-      # シンプルなテキストを追加
-      main_image.combine_options do |c|
-        c.fill "white"
-        c.font "Arial"
-        c.pointsize "24"
-        c.draw "text 50,100 'TuneBox Share Image'"
-        c.draw "text 50,150 'User: #{@user.name}'"
-        c.draw "text 50,200 'Albums: #{@favorite_albums.count}'"
-      end
-      Rails.logger.info "Text added"
-
-      # 画像を保存
-      filename = "share_image_#{@user.id}_#{Time.current.to_i}.png"
-      filepath = Rails.root.join('tmp', filename)
-      main_image.write(filepath)
       
+      Rails.logger.info "Image created successfully"
+      
+      # ファイルパスを返す
+      filepath = Rails.root.join('tmp', "share_image_#{@user.id}_#{Time.current.to_i}.png")
       Rails.logger.info "Image saved to: #{filepath}"
       filepath
       
