@@ -1,4 +1,4 @@
-require 'mini_magick'
+require 'chunky_png'
 require 'open-uri'
 
 class ShareImageGenerator
@@ -12,35 +12,18 @@ class ShareImageGenerator
     @total_height = @canvas_height
   end
 
-  def generate
+    def generate
     begin
       Rails.logger.info "Starting image generation for user #{@user.id}"
 
       # ファイルパスを準備
       filepath = Rails.root.join('tmp', "share_image_#{@user.id}_#{Time.current.to_i}.png")
 
-      # シンプルな画像を作成（テスト用）
-      image = MiniMagick::Image.new("800x600")
-      image.format "png"
-      
-      # 背景色を設定
-      image.combine_options do |c|
-        c.fill "#667eea"
-        c.draw "rectangle 0,0 800,600"
-      end
-      
-      # テキストを追加
-      image.combine_options do |c|
-        c.fill "white"
-        c.font "Arial"
-        c.pointsize "24"
-        c.draw "text 50,100 'TuneBox Share Image'"
-        c.draw "text 50,150 'User: #{@user.name}'"
-        c.draw "text 50,200 'Albums: #{@favorite_albums.count}'"
-      end
+      # ChunkyPNGでシンプルな画像を作成
+      png = ChunkyPNG::Image.new(800, 600, ChunkyPNG::Color.rgb(102, 126, 234)) # 青色背景
       
       # 画像を保存
-      image.write(filepath)
+      png.save(filepath.to_s, :fast_rgba)
 
       Rails.logger.info "Image created successfully"
       Rails.logger.info "Image saved to: #{filepath}"
