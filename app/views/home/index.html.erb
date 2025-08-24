@@ -8,10 +8,10 @@
       <i class="fas  me-3"></i>TuneBox
     </h1>
     <p class="lead mb-4" style="opacity: 0.9;">
-      あなただけの名盤リストを作成しよう
+      キャンバスページから名盤リストを作成しよう
     </p>
     <p class="mb-0" style="opacity: 0.8;">
-      お気に入りの音楽を発見・整理・共有
+      お気に入りのアルバムを並べ替えて、視覚的に音楽を楽しめます。
     </p>
   </div>
 </div>
@@ -31,12 +31,12 @@
         <% if user_signed_in? %>
           <!-- ログイン済みの場合：直接リストページへ -->
           <%= link_to favorite_albums_path, class: "btn btn-gradient btn-lg px-4" do %>
-            <i class="fas fa-plus me-2"></i>リストを作る
+            <i class="fas fa-plus me-2"></i>キャンバスに移動
           <% end %>
         <% else %>
           <!-- 未ログインの場合：モーダルを表示 -->
           <button class="btn btn-gradient btn-lg px-4" data-bs-toggle="modal" data-bs-target="#loginOptionsModal">
-            <i class="fas fa-plus me-2"></i>リストを作る
+            <i class="fas fa-plus me-2"></i>キャンバスに移動
           </button>
         <% end %>
       </div>
