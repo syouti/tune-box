@@ -1439,7 +1439,7 @@ function copyLink() {
               // モーダルのHTMLを作成
               const modalHTML = `
                 <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
-                  <div class="modal-dialog modal-xl" style="max-width: 1400px;">
+                  <div class="modal-dialog modal-xl">
                     <div class="modal-content">
                       <div class="modal-header">
                         <h5 class="modal-title" id="previewModalLabel">
@@ -1447,19 +1447,19 @@ function copyLink() {
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
-                      <div class="modal-body p-3">
-                        <div class="collection-container" style="margin: 0; padding: 10px;">
-                          <div class="main-content-area" style="justify-content: center; gap: 30px;">
+                      <div class="modal-body">
+                        <div class="collection-container">
+                          <div class="main-content-area">
                             <div class="canvas-section">
                               <div class="canvas-wrapper">
-                                <div class="collection-canvas" id="previewCanvas" style="width: 600px; height: 600px; max-width: 100%; background-size: 120px 120px;">
-                                  ${canvas.innerHTML.replace(/style="[^"]*"/g, 'style="width: 100px; height: 100px;"')}
+                                <div class="collection-canvas" id="previewCanvas">
+                                  ${canvas.innerHTML}
                                 </div>
                               </div>
                             </div>
-                            <div class="ranking-section" style="min-width: 350px; max-width: 400px;">
-                              <div class="ranking-container" style="height: 642px; max-height: 70vh;">
-                                <div class="album-list" id="previewAlbumList" style="overflow-y: auto;">
+                            <div class="ranking-section">
+                              <div class="ranking-container">
+                                <div class="album-list" id="previewAlbumList">
                                   ${albumList.innerHTML}
                                 </div>
                               </div>
