@@ -236,6 +236,7 @@ class FavoriteAlbumsController < ApplicationController
 
   # 画像生成用
   def generate_share_image
+    image_path = nil
     begin
       Rails.logger.info "Starting image generation request"
 
@@ -259,10 +260,14 @@ class FavoriteAlbumsController < ApplicationController
         message: "画像生成に失敗しました: #{e.message}"
       }, status: 500
     ensure
-      # 一時ファイルを削除
-      if defined?(image_path) && image_path && File.exist?(image_path)
-        File.delete(image_path)
-        Rails.logger.info "Temporary file deleted: #{image_path}"
+      # レスポンス送信後に一時ファイルを削除
+      if image_path && File.exist?(image_path)
+        # 少し遅延を入れてから削除
+        Thread.new do
+          sleep 1
+          File.delete(image_path)
+          Rails.logger.info "Temporary file deleted: #{image_path}"
+        end
       end
     end
   end

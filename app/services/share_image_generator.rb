@@ -21,7 +21,7 @@ class ShareImageGenerator
 
       # ChunkyPNGでシンプルな画像を作成
       png = ChunkyPNG::Image.new(800, 600, ChunkyPNG::Color.rgb(102, 126, 234)) # 青色背景
-      
+
       # 画像を保存
       png.save(filepath.to_s, :fast_rgba)
 
