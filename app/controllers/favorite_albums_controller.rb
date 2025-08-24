@@ -237,9 +237,13 @@ class FavoriteAlbumsController < ApplicationController
   # 画像生成用
   def generate_share_image
     begin
+      Rails.logger.info "Starting image generation request"
+      
       # 画像生成サービスを呼び出し
       generator = ShareImageGenerator.new(current_user, current_user.favorite_albums)
       image_path = generator.generate
+      
+      Rails.logger.info "Image generated successfully: #{image_path}"
 
       # 画像ファイルをレスポンスとして送信
       send_file image_path,
@@ -249,13 +253,17 @@ class FavoriteAlbumsController < ApplicationController
 
     rescue => e
       Rails.logger.error "Image generation error: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
       render json: {
         status: 'error',
-        message: '画像生成に失敗しました'
+        message: "画像生成に失敗しました: #{e.message}"
       }, status: 500
     ensure
       # 一時ファイルを削除
-      File.delete(image_path) if image_path && File.exist?(image_path)
+      if defined?(image_path) && image_path && File.exist?(image_path)
+        File.delete(image_path)
+        Rails.logger.info "Temporary file deleted: #{image_path}"
+      end
     end
   end
 

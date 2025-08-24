@@ -12,35 +12,33 @@ class ShareImageGenerator
     @total_height = @canvas_height
   end
 
-  def generate
+    def generate
     begin
       Rails.logger.info "Starting image generation for user #{@user.id}"
       
-      # メイン画像を作成
-      main_image = MiniMagick::Image.new("#{@total_width}x#{@total_height}")
+      # シンプルな画像を作成（テスト用）
+      main_image = MiniMagick::Image.new("800x600")
       main_image.format "png"
       
-      Rails.logger.info "Created main image: #{@total_width}x#{@total_height}"
+      Rails.logger.info "Created test image: 800x600"
 
-      # 背景をグラデーションで作成
-      create_background(main_image)
+      # シンプルな背景を作成
+      main_image.combine_options do |c|
+        c.fill "#667eea"
+        c.draw "rectangle 0,0 800,600"
+      end
       Rails.logger.info "Background created"
 
-      # キャンバス部分を描画
-      draw_canvas_section(main_image)
-      Rails.logger.info "Canvas section drawn"
-
-      # アルバムリスト部分を描画
-      draw_album_list_section(main_image)
-      Rails.logger.info "Album list section drawn"
-
-      # ヘッダー部分を描画
-      draw_header(main_image)
-      Rails.logger.info "Header drawn"
-
-      # フッター部分を描画
-      draw_footer(main_image)
-      Rails.logger.info "Footer drawn"
+      # シンプルなテキストを追加
+      main_image.combine_options do |c|
+        c.fill "white"
+        c.font "Arial"
+        c.pointsize "24"
+        c.draw "text 50,100 'TuneBox Share Image'"
+        c.draw "text 50,150 'User: #{@user.name}'"
+        c.draw "text 50,200 'Albums: #{@favorite_albums.count}'"
+      end
+      Rails.logger.info "Text added"
 
       # 画像を保存
       filename = "share_image_#{@user.id}_#{Time.current.to_i}.png"
@@ -254,7 +252,7 @@ class ShareImageGenerator
     image.combine_options do |c|
       c.fill "#2c3e50"
       c.draw "rectangle 0,#{@total_height - 60} #{@total_width},#{@total_height}"
-      
+
       # フッターテキスト
       c.fill "white"
       c.font "Arial"
