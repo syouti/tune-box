@@ -1416,13 +1416,14 @@ function showBulkDeleteProgress(totalCount) {
       <div class="mb-3">
         <i class="fas fa-trash fa-2x text-danger"></i>
       </div>
-      <h6 class="fw-bold mb-3">アルバムを削除中...</h6>
+      <h6 class="fw-bold mb-3">アルバムを一括削除中...</h6>
       <div class="progress mb-3" style="height: 10px;">
         <div class="progress-bar bg-danger" role="progressbar" style="width: 0%" id="deleteProgressBar"></div>
       </div>
       <p class="mb-0">
         <span id="deleteCount">0</span> / <span id="deleteTotalCount">${totalCount}</span> 完了
       </p>
+      <small class="text-muted">すべてのアルバムが一気に削除されます</small>
     </div>
   `;
   
@@ -1431,54 +1432,68 @@ function showBulkDeleteProgress(totalCount) {
 
 async function performBulkDelete(albums) {
   const totalCount = albums.length;
-  let deletedCount = 0;
   
-  for (let album of albums) {
-    try {
-      const spotifyId = album.dataset.spotifyId;
-      
-      album.classList.add('deleting');
-      
-      const response = await fetch(`/favorite_albums/${spotifyId}`, {
-        method: 'DELETE',
-        headers: {
-          'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
-        }
-      });
-      
-      const data = await response.json();
-      
-      if (data.status === 'removed') {
+  if (totalCount === 0) {
+    showMessage('削除するアルバムがありません', 'info');
+    return;
+  }
+  
+  try {
+    // すべてのアルバムを一気に削除
+    const response = await fetch('/favorite_albums/bulk_destroy', {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content'),
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.status === 'success') {
+      // すべてのアルバムを一気に非表示にする
+      albums.forEach(album => {
+        album.classList.add('deleting');
         setTimeout(() => {
           if (album.parentNode) {
             album.remove();
           }
-        }, 500);
+        }, 300);
+      });
+      
+      // アルバムリストも一気に非表示にする
+      const albumListItems = document.querySelectorAll('.album-list-item');
+      albumListItems.forEach(item => {
+        item.classList.add('deleting');
+        setTimeout(() => {
+          if (item.parentNode) {
+            item.remove();
+          }
+        }, 300);
+      });
+      
+      // プログレスバーを一気に100%にする
+      updateBulkDeleteProgress(totalCount, totalCount);
+      
+      setTimeout(() => {
+        hideBulkDeleteProgress();
+        showMessage(`${totalCount}枚のアルバムを削除しました`, 'success');
         
-        deletedCount++;
-        updateBulkDeleteProgress(deletedCount, totalCount);
-        
-        const gridX = parseInt(album.dataset.gridX);
-        const gridY = parseInt(album.dataset.gridY);
-        occupiedPositions.delete(`${gridX},${gridY}`);
-        
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-    } catch (error) {
-      console.error('Delete error:', error);
+        // ページをリロードして空の状態を表示
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }, 500);
+      
+    } else {
+      throw new Error(data.message || '削除に失敗しました');
     }
-  }
-  
-  setTimeout(() => {
-    hideBulkDeleteProgress();
-    updateAlbumList();
-    initializeHoverLinks();
-    showMessage(`${deletedCount}枚のアルバムを削除しました`, 'success');
     
-    setTimeout(() => {
-      window.location.reload();
-    }, 1500);
-  }, 1000);
+  } catch (error) {
+    console.error('Bulk delete error:', error);
+    hideBulkDeleteProgress();
+    showMessage('一括削除に失敗しました', 'error');
+  }
 }
 
 function updateBulkDeleteProgress(current, total) {

@@ -13,4 +13,43 @@
  *= require_tree .
  *= require_self
  */
- /* app/assets/stylesheets/application.css に追加 */
+
+/* 一括削除アニメーション */
+.album-jacket.deleting {
+  animation: bulkDeleteAnimation 0.5s ease-out forwards;
+  transform-origin: center;
+}
+
+@keyframes bulkDeleteAnimation {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2) rotate(180deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0) rotate(360deg);
+  }
+}
+
+.album-list-item {
+  transition: opacity 0.3s ease;
+}
+
+.album-list-item.deleting {
+  animation: listItemDeleteAnimation 0.3s ease-out forwards;
+}
+
+@keyframes listItemDeleteAnimation {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+}
