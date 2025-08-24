@@ -12,7 +12,7 @@ class ShareImageGenerator
     @total_height = @canvas_height
   end
 
-        def generate
+          def generate
     begin
       Rails.logger.info "Starting image generation for user #{@user.id}"
       
@@ -30,7 +30,7 @@ class ShareImageGenerator
         convert.draw "text 50,150 'User: #{@user.name}'"
         convert.draw "text 50,200 'Albums: #{@favorite_albums.count}'"
         convert << filepath.to_s
-      end
+      end.call
       
       Rails.logger.info "Image created successfully"
       Rails.logger.info "Image saved to: #{filepath}"
