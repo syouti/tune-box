@@ -19,6 +19,26 @@ class UsersController < ApplicationController
     @favorite_live_events = @user.favorite_live_events.order(date: :asc)
   end
 
+  def edit
+    @user = current_user
+  end
+
+  def update
+    @user = current_user
+
+    # パスワードが空の場合はパスワード関連のパラメータを除外
+    if params[:user][:password].blank?
+      params[:user].delete(:password)
+      params[:user].delete(:password_confirmation)
+    end
+
+    if @user.update(user_params)
+      redirect_to user_path(@user), notice: 'プロフィールが正常に更新されました'
+    else
+      render :edit
+    end
+  end
+
   private
 
   def user_params

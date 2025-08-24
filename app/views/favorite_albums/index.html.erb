@@ -103,8 +103,8 @@
         <% end %>
       <% else %>
         <div class="empty-album-list">
-          <i class="fas fa-music fa-2x text-muted mb-3"></i>
-          <p class="text-muted">アルバムを追加するとここに表示されます</p>
+          <i class="fas fa-music fa-2x text-white mb-3"></i>
+          <p class="text-white">アルバムを追加するとここに表示されます</p>
         </div>
       <% end %>
     </div>
@@ -471,6 +471,7 @@
   max-width: 150px; /* 🆕 最大幅を拡大 */
   min-width: 80px; /* 🆕 最小幅を確保 */
   text-align: right;
+}
 
 .empty-album-list {
   display: flex;
@@ -479,12 +480,9 @@
   justify-content: center;
   height: 100%;
   text-align: center;
-  color: #cccccc; /* 薄いグレー文字 */
+  color: white;
 }
 
-.empty-album-list i {
-  color: #666666; /* アイコンは中間グレー */
-}
 
 /* ヘッダーがある場合のスタイル */
 .ranking-header h3,
@@ -704,6 +702,10 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeDragAndDrop();
   updateAlbumList();
   initializeHoverLinks();
+  
+  // 一括削除ボタンの初期状態を設定
+  const albumCount = document.querySelectorAll('.album-jacket').length;
+  updateBulkDeleteButton(albumCount);
 });
 
 // CSRF トークンの状態確認
@@ -1275,11 +1277,14 @@ function updateAlbumList() {
   const albums = Array.from(document.querySelectorAll('.album-jacket'));
   const albumList = document.getElementById('albumList');
   
+  // 一括削除ボタンの表示/非表示を更新
+  updateBulkDeleteButton(albums.length);
+  
   if (albums.length === 0) {
     albumList.innerHTML = `
       <div class="empty-album-list">
-        <i class="fas fa-music fa-2x text-muted mb-3"></i>
-        <p class="text-muted">アルバムを追加するとここに表示されます</p>
+        <i class="fas fa-music fa-2x text-white mb-3"></i>
+        <p class="text-white">アルバムを追加するとここに表示されます</p>
       </div>
     `;
     return;
@@ -1531,10 +1536,8 @@ async function performBulkDelete(albums) {
     initializeHoverLinks();
     showMessage(`${deletedCount}枚のアルバムを削除しました`, 'success');
     
-    // ページをリロードして最新状態を反映
-    setTimeout(() => {
-      window.location.reload();
-    }, 1500);
+    // 一括削除ボタンの表示/非表示を更新
+    updateBulkDeleteButton(0);
   }, 1000);
 }
 
@@ -1558,6 +1561,33 @@ function hideBulkDeleteProgress() {
         progress.parentNode.removeChild(progress);
       }
     }, 300);
+  }
+}
+
+// 一括削除ボタンの表示/非表示を更新
+function updateBulkDeleteButton(albumCount) {
+  const bulkDeleteBtn = document.querySelector('.bulk-delete-btn');
+  
+  if (albumCount > 0) {
+    // アルバムがある場合はボタンを表示
+    if (bulkDeleteBtn) {
+      bulkDeleteBtn.style.display = 'inline-block';
+    } else {
+      // ボタンが存在しない場合は作成
+      const addAlbumBtn = document.querySelector('.add-album-btn');
+      if (addAlbumBtn && addAlbumBtn.parentNode) {
+        const newBulkDeleteBtn = document.createElement('button');
+        newBulkDeleteBtn.className = 'btn btn-danger ms-2 bulk-delete-btn';
+        newBulkDeleteBtn.onclick = 'showBulkDeleteModal()';
+        newBulkDeleteBtn.innerHTML = '<i class="fas fa-trash me-2"></i>一括削除';
+        addAlbumBtn.parentNode.appendChild(newBulkDeleteBtn);
+      }
+    }
+  } else {
+    // アルバムがない場合はボタンを非表示
+    if (bulkDeleteBtn) {
+      bulkDeleteBtn.style.display = 'none';
+    }
   }
 }
 

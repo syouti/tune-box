@@ -43,7 +43,7 @@ Rails.application.routes.draw do
   # ユーザー認証関連
   get 'signup', to: 'users#new'
   post 'signup', to: 'users#create'
-  resources :users, only: [:show]
+  resources :users, only: [:show, :edit, :update]
 
   get 'login', to: 'sessions#new'
   post 'login', to: 'sessions#create'
