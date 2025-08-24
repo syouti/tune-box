@@ -125,20 +125,38 @@
         <div class="text-center">
           <p class="mb-4">あなたの名盤リストを友達にシェアしましょう！</p>
           
-          <!-- 画像生成セクション -->
+          <!-- プレビューセクション -->
           <div class="mb-4 p-3 bg-light rounded">
             <h6 class="fw-bold mb-2">
-              <i class="fas fa-image me-2"></i>画像を生成してシェア
+              <i class="fas fa-eye me-2"></i>プレビューを表示
             </h6>
-            <p class="text-muted small mb-3">キャンバスとアルバムリストを一つの画像にまとめます</p>
-            <button class="btn btn-warning btn-lg" onclick="generateShareImage()" id="generateImageBtn">
-              <i class="fas fa-magic me-2"></i>画像を生成
+            <p class="text-muted small mb-3">キャンバスとアルバムリストのプレビューを表示します</p>
+            <button class="btn btn-primary btn-lg" onclick="previewShareImage()" id="previewImageBtn">
+              <i class="fas fa-eye me-2"></i>プレビュー表示
             </button>
-            <div id="imageGenerationProgress" class="mt-3" style="display: none;">
-              <div class="spinner-border text-warning" role="status">
-                <span class="visually-hidden">画像生成中...</span>
+            <div id="previewProgress" class="mt-3" style="display: none;">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">プレビュー生成中...</span>
               </div>
-              <p class="mt-2 text-muted">画像を生成中です...</p>
+              <p class="mt-2 text-muted">プレビューを生成中です...</p>
+            </div>
+          </div>
+
+          <!-- プレビュー表示エリア -->
+          <div id="previewArea" class="mb-4" style="display: none;">
+            <h6 class="fw-bold mb-2">
+              <i class="fas fa-image me-2"></i>プレビュー
+            </h6>
+            <div class="text-center">
+              <img id="previewImage" class="img-fluid border rounded" style="max-width: 100%; max-height: 400px;" alt="プレビュー画像">
+            </div>
+            <div class="mt-3 text-center">
+              <button class="btn btn-success btn-lg" onclick="generateShareImage()" id="generateImageBtn">
+                <i class="fas fa-download me-2"></i>画像をダウンロード
+              </button>
+              <button class="btn btn-info btn-lg ms-2" onclick="shareToSNS()" id="shareSNSBtn">
+                <i class="fas fa-share-alt me-2"></i>SNSでシェア
+              </button>
             </div>
           </div>
           
@@ -1393,58 +1411,167 @@ function copyLink() {
   });
 }
 
-// 画像生成機能
-function generateShareImage() {
-  const generateBtn = document.getElementById('generateImageBtn');
-  const progressDiv = document.getElementById('imageGenerationProgress');
-  
-  // ボタンを無効化してプログレスを表示
-  generateBtn.disabled = true;
-  generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>生成中...';
-  progressDiv.style.display = 'block';
-  
-  // 画像生成リクエストを送信
-  fetch('/favorite_albums/generate_share_image', {
-    method: 'GET',
-    headers: {
-      'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
-    }
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    return response.blob();
-  })
-  .then(blob => {
-    // 画像をダウンロード
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `tunebox_share_${new Date().getTime()}.png`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-    
-    // 成功メッセージを表示
-    showMessage('画像の生成が完了しました！', 'success');
-    
-    // ボタンを元に戻す
-    generateBtn.disabled = false;
-    generateBtn.innerHTML = '<i class="fas fa-magic me-2"></i>画像を生成';
-    progressDiv.style.display = 'none';
-  })
-  .catch(error => {
-    console.error('Image generation error:', error);
-    showMessage('画像生成に失敗しました', 'error');
-    
-    // ボタンを元に戻す
-    generateBtn.disabled = false;
-    generateBtn.innerHTML = '<i class="fas fa-magic me-2"></i>画像を生成';
-    progressDiv.style.display = 'none';
-  });
-}
+            // プレビュー機能
+            function previewShareImage() {
+              const previewBtn = document.getElementById('previewImageBtn');
+              const progressDiv = document.getElementById('previewProgress');
+
+              // ボタンを無効化してプログレスを表示
+              previewBtn.disabled = true;
+              previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>生成中...';
+              progressDiv.style.display = 'block';
+
+              // プレビュー生成リクエストを送信
+              fetch('/favorite_albums/preview_share_image', {
+                method: 'GET',
+                headers: {
+                  'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
+                }
+              })
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+              })
+              .then(data => {
+                if (data.status === 'success') {
+                  // プレビュー画像を表示
+                  const previewImage = document.getElementById('previewImage');
+                  const previewArea = document.getElementById('previewArea');
+                  
+                  previewImage.src = data.image_data;
+                  previewArea.style.display = 'block';
+
+                  // 成功メッセージを表示
+                  showMessage('プレビューの生成が完了しました！', 'success');
+                } else {
+                  throw new Error(data.message || 'プレビュー生成に失敗しました');
+                }
+
+                // ボタンを元に戻す
+                previewBtn.disabled = false;
+                previewBtn.innerHTML = '<i class="fas fa-eye me-2"></i>プレビュー表示';
+                progressDiv.style.display = 'none';
+              })
+              .catch(error => {
+                console.error('Preview generation error:', error);
+                showMessage('プレビュー生成に失敗しました', 'error');
+
+                // ボタンを元に戻す
+                previewBtn.disabled = false;
+                previewBtn.innerHTML = '<i class="fas fa-eye me-2"></i>プレビュー表示';
+                progressDiv.style.display = 'none';
+              });
+            }
+
+            // 画像生成機能（ダウンロード用）
+            function generateShareImage() {
+              const generateBtn = document.getElementById('generateImageBtn');
+
+              // ボタンを無効化
+              generateBtn.disabled = true;
+              generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>ダウンロード中...';
+
+              // 画像生成リクエストを送信
+              fetch('/favorite_albums/generate_share_image', {
+                method: 'GET',
+                headers: {
+                  'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
+                }
+              })
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.blob();
+              })
+              .then(blob => {
+                // 画像をダウンロード
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `tunebox_share_${new Date().getTime()}.png`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                // 成功メッセージを表示
+                showMessage('画像のダウンロードが完了しました！', 'success');
+
+                // ボタンを元に戻す
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<i class="fas fa-download me-2"></i>画像をダウンロード';
+              })
+              .catch(error => {
+                console.error('Image generation error:', error);
+                showMessage('画像生成に失敗しました', 'error');
+
+                // ボタンを元に戻す
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<i class="fas fa-download me-2"></i>画像をダウンロード';
+              });
+            }
+
+            // SNS共有機能
+            function shareToSNS() {
+              const shareBtn = document.getElementById('shareSNSBtn');
+              
+              // ボタンを無効化
+              shareBtn.disabled = true;
+              shareBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>共有中...';
+
+              // 画像生成リクエストを送信
+              fetch('/favorite_albums/generate_share_image', {
+                method: 'GET',
+                headers: {
+                  'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
+                }
+              })
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.blob();
+              })
+              .then(blob => {
+                // 画像をBlob URLに変換
+                const url = window.URL.createObjectURL(blob);
+                
+                // Web Share APIを使用してSNS共有
+                if (navigator.share) {
+                  navigator.share({
+                    title: 'TuneBox - 私の名盤リスト',
+                    text: 'TuneBoxで作成した名盤リストをシェアします！',
+                    url: window.location.href
+                  }).then(() => {
+                    showMessage('SNS共有が完了しました！', 'success');
+                  }).catch((error) => {
+                    console.error('Share failed:', error);
+                    showMessage('SNS共有に失敗しました', 'error');
+                  });
+                } else {
+                  // Web Share APIがサポートされていない場合
+                  showMessage('お使いのブラウザではSNS共有がサポートされていません', 'info');
+                }
+
+                // Blob URLをクリーンアップ
+                window.URL.revokeObjectURL(url);
+
+                // ボタンを元に戻す
+                shareBtn.disabled = false;
+                shareBtn.innerHTML = '<i class="fas fa-share-alt me-2"></i>SNSでシェア';
+              })
+              .catch(error => {
+                console.error('SNS share error:', error);
+                showMessage('SNS共有に失敗しました', 'error');
+
+                // ボタンを元に戻す
+                shareBtn.disabled = false;
+                shareBtn.innerHTML = '<i class="fas fa-share-alt me-2"></i>SNSでシェア';
+              });
+            }
 
 // 一括削除機能
 function showBulkDeleteModal() {

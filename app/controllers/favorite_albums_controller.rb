@@ -234,6 +234,42 @@ class FavoriteAlbumsController < ApplicationController
     }, status: 500
   end
 
+  # プレビュー用
+  def preview_share_image
+    begin
+      Rails.logger.info "Starting preview generation request"
+
+      # 画像生成サービスを呼び出し
+      generator = ShareImageGenerator.new(current_user, current_user.favorite_albums)
+      image_path = generator.generate
+
+      Rails.logger.info "Preview generated successfully: #{image_path}"
+
+      # Base64エンコードしてJSONで返す
+      image_data = File.binread(image_path)
+      base64_image = Base64.strict_encode64(image_data)
+      
+      render json: {
+        status: 'success',
+        image_data: "data:image/png;base64,#{base64_image}"
+      }
+
+    rescue => e
+      Rails.logger.error "Preview generation error: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      render json: {
+        status: 'error',
+        message: "プレビュー生成に失敗しました: #{e.message}"
+      }, status: 500
+    ensure
+      # 一時ファイルを削除
+      if defined?(image_path) && image_path && File.exist?(image_path)
+        File.delete(image_path)
+        Rails.logger.info "Temporary preview file deleted: #{image_path}"
+      end
+    end
+  end
+
   # 画像生成用
   def generate_share_image
     image_path = nil

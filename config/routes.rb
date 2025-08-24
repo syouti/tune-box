@@ -29,6 +29,7 @@ Rails.application.routes.draw do
       post :share
       delete :bulk_destroy
       get :generate_share_image
+      get :preview_share_image # Added for preview
     end
   end
 
