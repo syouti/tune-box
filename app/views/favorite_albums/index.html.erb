@@ -1422,48 +1422,24 @@ function copyLink() {
               previewBtn.disabled = true;
               previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>生成中...';
 
-              // プレビュー生成リクエストを送信
-              fetch('/favorite_albums/preview_share_image', {
-                method: 'GET',
-                headers: {
-                  'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
-                }
-              })
-              .then(response => {
-                if (!response.ok) {
-                  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.json();
-              })
-              .then(data => {
-                if (data.status === 'success') {
-                  // プレビュー画像を表示（モーダルで表示）
-                  showPreviewModal(data.image_data);
-                  showMessage('プレビューの生成が完了しました！', 'success');
-                } else {
-                  throw new Error(data.message || 'プレビュー生成に失敗しました');
-                }
-
-                // ボタンを元に戻す
-                previewBtn.disabled = false;
-                previewBtn.innerHTML = '<i class="fas fa-eye me-2"></i>プレビュー';
-              })
-              .catch(error => {
-                console.error('Preview generation error:', error);
-                showMessage('プレビュー生成に失敗しました', 'error');
-
-                // ボタンを元に戻す
-                previewBtn.disabled = false;
-                previewBtn.innerHTML = '<i class="fas fa-eye me-2"></i>プレビュー';
-              });
+              // 現在のページのキャンバスとアルバムリストをそのままモーダルで表示
+              showPreviewModal();
+              
+              // ボタンを元に戻す
+              previewBtn.disabled = false;
+              previewBtn.innerHTML = '<i class="fas fa-eye me-2"></i>プレビュー';
             }
 
             // プレビューモーダルを表示
-            function showPreviewModal(imageData) {
+            function showPreviewModal() {
+              // 現在のキャンバスとアルバムリストのHTMLを取得
+              const canvas = document.querySelector('.collection-canvas');
+              const albumList = document.querySelector('.album-list');
+              
               // モーダルのHTMLを作成
               const modalHTML = `
                 <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
-                  <div class="modal-dialog modal-lg">
+                  <div class="modal-dialog modal-xl">
                     <div class="modal-content">
                       <div class="modal-header">
                         <h5 class="modal-title" id="previewModalLabel">
@@ -1471,8 +1447,25 @@ function copyLink() {
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
-                      <div class="modal-body text-center">
-                        <img src="${imageData}" class="img-fluid border rounded" style="max-width: 100%; max-height: 500px;" alt="プレビュー画像">
+                      <div class="modal-body">
+                        <div class="collection-container">
+                          <div class="main-content-area">
+                            <div class="canvas-section">
+                              <div class="canvas-wrapper">
+                                <div class="collection-canvas" id="previewCanvas">
+                                  ${canvas.innerHTML}
+                                </div>
+                              </div>
+                            </div>
+                            <div class="ranking-section">
+                              <div class="ranking-container">
+                                <div class="album-list" id="previewAlbumList">
+                                  ${albumList.innerHTML}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
