@@ -10,6 +10,7 @@ class ShareImageGenerator
   def generate
     begin
       Rails.logger.info "Starting enhanced image generation for user #{@user.id}"
+      Rails.logger.info "Total albums: #{@favorite_albums.count}"
 
       filepath = Rails.root.join('tmp', "share_image_#{@user.id}_#{Time.current.to_i}.png")
 
@@ -105,7 +106,10 @@ class ShareImageGenerator
     end
 
         # アルバムジャケットを配置
+    Rails.logger.info "Drawing #{@favorite_albums.count} albums on canvas"
     @favorite_albums.each_with_index do |album, index|
+      Rails.logger.info "Album #{index + 1}: #{album.name} at position (#{album.position_x}, #{album.position_y})"
+      
       if index < 25 # 最大25個まで
         # 位置を計算
         if album.position_x.present? && album.position_y.present?
@@ -116,14 +120,18 @@ class ShareImageGenerator
           grid_y = (index / 5).floor
         end
 
+        Rails.logger.info "Grid position: (#{grid_x}, #{grid_y})"
+
         # 座標の範囲チェック
         if grid_x >= 0 && grid_x < 5 && grid_y >= 0 && grid_y < 5
           album_x = canvas_x + grid_x * grid_size + 10
           album_y = canvas_y + grid_y * grid_size + 10
           album_size = 120
 
+          Rails.logger.info "Drawing album at pixel position: (#{album_x}, #{album_y})"
+
           # 画像の範囲内かチェック
-          if album_x + album_size <= canvas_x + canvas_width && 
+          if album_x + album_size <= canvas_x + canvas_width &&
              album_y + album_size <= canvas_y + canvas_height
 
             # アルバムジャケット（グレーのブロック + 番号）
@@ -137,13 +145,17 @@ class ShareImageGenerator
             number_x = album_x + 5
             number_y = album_y + 5
             number_size = 20
-            
+
             (number_x...number_x + number_size).each do |x|
               (number_y...number_y + number_size).each do |y|
                 image[x, y] = ChunkyPNG::Color.rgb(255, 255, 255)
               end
             end
+          else
+            Rails.logger.warn "Album #{index + 1} would be out of bounds"
           end
+        else
+          Rails.logger.warn "Album #{index + 1} grid position out of range: (#{grid_x}, #{grid_y})"
         end
       end
     end
