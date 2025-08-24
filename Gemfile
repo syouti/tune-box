@@ -32,6 +32,10 @@ gem "bootsnap", require: false
 # API連携用
 gem 'httparty'
 
+# 画像生成用
+gem 'mini_magick'
+gem 'chunky_png'
+
 
 group :development, :test do
   # Use sqlite3 as the database for Active Record

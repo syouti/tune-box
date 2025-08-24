@@ -125,6 +125,25 @@
         <div class="text-center">
           <p class="mb-4">あなたの名盤リストを友達にシェアしましょう！</p>
           
+          <!-- 画像生成セクション -->
+          <div class="mb-4 p-3 bg-light rounded">
+            <h6 class="fw-bold mb-2">
+              <i class="fas fa-image me-2"></i>画像を生成してシェア
+            </h6>
+            <p class="text-muted small mb-3">キャンバスとアルバムリストを一つの画像にまとめます</p>
+            <button class="btn btn-warning btn-lg" onclick="generateShareImage()" id="generateImageBtn">
+              <i class="fas fa-magic me-2"></i>画像を生成
+            </button>
+            <div id="imageGenerationProgress" class="mt-3" style="display: none;">
+              <div class="spinner-border text-warning" role="status">
+                <span class="visually-hidden">画像生成中...</span>
+              </div>
+              <p class="mt-2 text-muted">画像を生成中です...</p>
+            </div>
+          </div>
+          
+          <hr class="my-4">
+          
           <div class="d-grid gap-3" style="max-width: 400px; margin: 0 auto;">
             <a href="#" class="btn btn-primary btn-lg sns-share-btn" onclick="shareToTwitter()">
               <i class="fab fa-x-twitter me-2"></i>X (Twitter) でシェア
@@ -1371,6 +1390,59 @@ function copyLink() {
     }, 2000);
   }).catch(() => {
     alert('リンクのコピーに失敗しました');
+  });
+}
+
+// 画像生成機能
+function generateShareImage() {
+  const generateBtn = document.getElementById('generateImageBtn');
+  const progressDiv = document.getElementById('imageGenerationProgress');
+  
+  // ボタンを無効化してプログレスを表示
+  generateBtn.disabled = true;
+  generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>生成中...';
+  progressDiv.style.display = 'block';
+  
+  // 画像生成リクエストを送信
+  fetch('/favorite_albums/generate_share_image', {
+    method: 'GET',
+    headers: {
+      'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content')
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    return response.blob();
+  })
+  .then(blob => {
+    // 画像をダウンロード
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tunebox_share_${new Date().getTime()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    // 成功メッセージを表示
+    showMessage('画像の生成が完了しました！', 'success');
+    
+    // ボタンを元に戻す
+    generateBtn.disabled = false;
+    generateBtn.innerHTML = '<i class="fas fa-magic me-2"></i>画像を生成';
+    progressDiv.style.display = 'none';
+  })
+  .catch(error => {
+    console.error('Image generation error:', error);
+    showMessage('画像生成に失敗しました', 'error');
+    
+    // ボタンを元に戻す
+    generateBtn.disabled = false;
+    generateBtn.innerHTML = '<i class="fas fa-magic me-2"></i>画像を生成';
+    progressDiv.style.display = 'none';
   });
 }
 

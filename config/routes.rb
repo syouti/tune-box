@@ -28,6 +28,7 @@ Rails.application.routes.draw do
       post :save_to_account
       post :share
       delete :bulk_destroy
+      get :generate_share_image
     end
   end
 

@@ -234,6 +234,31 @@ class FavoriteAlbumsController < ApplicationController
     }, status: 500
   end
 
+  # 画像生成用
+  def generate_share_image
+    begin
+      # 画像生成サービスを呼び出し
+      generator = ShareImageGenerator.new(current_user, current_user.favorite_albums)
+      image_path = generator.generate
+      
+      # 画像ファイルをレスポンスとして送信
+      send_file image_path, 
+                type: 'image/png', 
+                disposition: 'attachment',
+                filename: "tunebox_share_#{current_user.name}_#{Time.current.to_i}.png"
+                
+    rescue => e
+      Rails.logger.error "Image generation error: #{e.message}"
+      render json: {
+        status: 'error',
+        message: '画像生成に失敗しました'
+      }, status: 500
+    ensure
+      # 一時ファイルを削除
+      File.delete(image_path) if image_path && File.exist?(image_path)
+    end
+  end
+
   private
 
   def require_login
