@@ -481,6 +481,40 @@
           }, 3000);
         }
 
+        // ログアウトリンクのクリックイベントを確実に処理
+        document.addEventListener('DOMContentLoaded', function() {
+          const logoutLink = document.getElementById('logout-link');
+          if (logoutLink) {
+            logoutLink.addEventListener('click', function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              console.log('Logout link clicked, submitting form...');
+              
+              // Rails UJSの方法でDELETEリクエストを送信
+              const form = document.createElement('form');
+              form.method = 'POST';
+              form.action = this.href;
+              form.style.display = 'none';
+              
+              const methodInput = document.createElement('input');
+              methodInput.type = 'hidden';
+              methodInput.name = '_method';
+              methodInput.value = 'DELETE';
+              
+              const csrfInput = document.createElement('input');
+              csrfInput.type = 'hidden';
+              csrfInput.name = 'authenticity_token';
+              csrfInput.value = document.querySelector('[name="csrf-token"]').getAttribute('content');
+              
+              form.appendChild(methodInput);
+              form.appendChild(csrfInput);
+              document.body.appendChild(form);
+              form.submit();
+            });
+          }
+        });
+
         // ページ読み込み時にお気に入り状態をチェック
         checkFavoriteStatus();
 
