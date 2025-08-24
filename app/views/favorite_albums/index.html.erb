@@ -1439,7 +1439,7 @@ function copyLink() {
               // モーダルのHTMLを作成
               const modalHTML = `
                 <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
-                  <div class="modal-dialog modal-xl" style="max-width: 1200px;">
+                  <div class="modal-dialog modal-xl" style="max-width: 1400px;">
                     <div class="modal-content">
                       <div class="modal-header">
                         <h5 class="modal-title" id="previewModalLabel">
@@ -1449,16 +1449,16 @@ function copyLink() {
                       </div>
                       <div class="modal-body p-3">
                         <div class="collection-container" style="margin: 0; padding: 10px;">
-                          <div class="main-content-area" style="justify-content: center; gap: 20px;">
+                          <div class="main-content-area" style="justify-content: center; gap: 30px;">
                             <div class="canvas-section">
                               <div class="canvas-wrapper">
-                                <div class="collection-canvas" id="previewCanvas" style="width: 500px; height: 500px; max-width: 100%;">
-                                  ${canvas.innerHTML}
+                                <div class="collection-canvas" id="previewCanvas" style="width: 600px; height: 600px; max-width: 100%; background-size: 120px 120px;">
+                                  ${canvas.innerHTML.replace(/style="[^"]*"/g, 'style="width: 100px; height: 100px;"')}
                                 </div>
                               </div>
                             </div>
-                            <div class="ranking-section" style="min-width: 300px; max-width: 350px;">
-                              <div class="ranking-container" style="height: 542px; max-height: 60vh;">
+                            <div class="ranking-section" style="min-width: 350px; max-width: 400px;">
+                              <div class="ranking-container" style="height: 642px; max-height: 70vh;">
                                 <div class="album-list" id="previewAlbumList" style="overflow-y: auto;">
                                   ${albumList.innerHTML}
                                 </div>
