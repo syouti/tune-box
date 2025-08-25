@@ -26,7 +26,7 @@ class ApplicationController < ActionController::Base
   def require_login_or_guest
     # ゲストパラメータがある場合はゲストモードを設定
     session[:guest_mode] = true if params[:guest] == 'true' && !user_signed_in?
-    
+
     # ログインユーザーまたはゲストモードの場合は許可
     return if user_signed_in? || session[:guest_mode]
 

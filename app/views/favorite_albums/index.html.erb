@@ -2,7 +2,7 @@
 <% if guest_user? %>
   <div class="guest-notice">
     <i class="fas fa-info-circle"></i>
-    <strong>ゲストモードです</strong> - アルバムを追加して体験してみてください。保存するにはログインが必要です。
+    <strong>ゲストモードです</strong> - 保存するにはログインが必要です。
   </div>
 <% end %>
 
@@ -263,26 +263,21 @@
         <div class="text-center">
           <div class="mb-4">
             <i class="fas fa-trash fa-3x text-danger mb-3"></i>
-            <h6 class="fw-bold">本当に全てのアルバムを削除しますか？</h6>
+            <h6 class="fw-bold">全てのアルバムを削除しますか？</h6>
             <p class="text-muted">現在 <span id="album-count"><%= @favorite_albums.count %></span> 枚のアルバムがコレクションにあります。</p>
             <div class="alert alert-warning">
               <i class="fas fa-exclamation-triangle me-2"></i>
               <strong>この操作は取り消せません！</strong>
             </div>
           </div>
-          
-          <div class="mb-3">
-            <label for="confirmText" class="form-label">確認のため「削除」と入力してください：</label>
-            <input type="text" class="form-control text-center" id="confirmText" placeholder="削除">
-          </div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="fas fa-times me-2"></i>キャンセル
+          <i class="fas fa-times me-2"></i>いいえ
         </button>
-        <button type="button" class="btn btn-danger" id="confirmBulkDelete" disabled onclick="executeBulkDelete()">
-          <i class="fas fa-trash me-2"></i>全て削除する
+        <button type="button" class="btn btn-danger" onclick="executeBulkDelete()">
+          <i class="fas fa-trash me-2"></i>はい
         </button>
       </div>
     </div>
@@ -584,7 +579,7 @@
   height: 100%;
   text-align: center;
   color:white;
-  
+
 }
 
 
@@ -1746,7 +1741,7 @@ ${shareUrl}</textarea>
                 // Instagramアプリで開く（ただし、テキストの共有は制限がある）
                 window.open('instagram://app', '_blank');
                 showMessage('Instagramアプリが開きました。投稿テキストをコピーして使用してください。', 'info');
-              } else {
+    } else {
                 // デスクトップの場合はテキストをコピー
                 navigator.clipboard.writeText(`${text}\n\n${url}`).then(() => {
                   showMessage('投稿テキストをクリップボードにコピーしました！Instagramで投稿してください。', 'success');
@@ -1791,20 +1786,6 @@ ${shareUrl}</textarea>
 // 一括削除機能
 function showBulkDeleteModal() {
   const modal = new bootstrap.Modal(document.getElementById('bulkDeleteModal'));
-  const confirmText = document.getElementById('confirmText');
-  const confirmButton = document.getElementById('confirmBulkDelete');
-  
-  confirmText.value = '';
-  confirmButton.disabled = true;
-  
-  confirmText.addEventListener('input', function() {
-    if (this.value === '削除') {
-      confirmButton.disabled = false;
-    } else {
-      confirmButton.disabled = true;
-    }
-  });
-  
   modal.show();
 }
 
@@ -1855,15 +1836,15 @@ async function performBulkDelete(albums) {
   try {
     // すべてのアルバムを一気に削除
     const response = await fetch('/favorite_albums/bulk_destroy', {
-      method: 'DELETE',
-      headers: {
+        method: 'DELETE',
+        headers: {
         'X-CSRF-Token': document.querySelector('[name="csrf-token"]').getAttribute('content'),
         'Content-Type': 'application/json'
-      }
-    });
-    
-    const data = await response.json();
-    
+        }
+      });
+      
+      const data = await response.json();
+      
     if (data.status === 'success') {
       // すべてのアルバムを一気に非表示にする
       albums.forEach(album => {
@@ -1888,15 +1869,15 @@ async function performBulkDelete(albums) {
       
       // プログレスバーを一気に100%にする
       updateBulkDeleteProgress(totalCount, totalCount);
-      
-      setTimeout(() => {
-        hideBulkDeleteProgress();
+  
+  setTimeout(() => {
+    hideBulkDeleteProgress();
         showMessage(`${totalCount}枚のアルバムを削除しました`, 'success');
-        
+    
         // ページをリロードして空の状態を表示
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+    setTimeout(() => {
+      window.location.reload();
+  }, 1000);
       }, 500);
       
     } else {
