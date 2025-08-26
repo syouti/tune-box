@@ -322,9 +322,7 @@ function addFavorite(button) {
       updateFavoriteCounter();
       updateButtonToRemove(button);
       showMessage(`「${albumData.name}」をコレクションに追加しました！`, 'success');
-    } else if (data.status === 'guest_mode') {
-      button.innerHTML = originalContent;
-      showMessage(data.message, 'info');
+
     } else if (data.status === 'error') {
       button.innerHTML = originalContent;
       showMessage(data.message || 'エラーが発生しました', 'error');
