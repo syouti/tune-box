@@ -66,4 +66,4 @@ ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE $PORT
-CMD ["./bin/rails", "server", "-b", "0.0.0.0", "-p", "$PORT"]
+CMD ./bin/rails server -b 0.0.0.0 -p $PORT
