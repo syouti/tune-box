@@ -6,12 +6,10 @@ class ApplicationController < ActionController::Base
 
   helper_method :current_user, :user_signed_in?
 
-  # 基本的なセキュリティヘッダーを追加（機能に影響なし）
-  before_action :set_basic_security_headers
-
   def current_user
     @current_user ||= User.find(session[:user_id]) if session[:user_id]
   end
+
 
   private
 
@@ -27,10 +25,5 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  # 基本的なセキュリティヘッダー（機能に影響なし）
-  def set_basic_security_headers
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'DENY'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-  end
+
 end
