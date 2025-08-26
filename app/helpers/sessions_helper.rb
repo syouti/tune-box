@@ -16,11 +16,5 @@ module SessionsHelper
     @current_user = nil
   end
 
-  def guest_session_id
-    session[:guest_session_id] ||= SecureRandom.hex(16)
-  end
 
-  def guest_favorite_albums
-    session[:guest_favorites] ||= []
-  end
 end
