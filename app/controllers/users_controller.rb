@@ -16,15 +16,7 @@ class UsersController < ApplicationController
 
   def show
     @user = User.find(params[:id])
-
-    # アクセス制御：自分のプロフィールのみアクセス可能
-    unless @user == current_user
-      redirect_to root_path, alert: 'アクセス権限がありません'
-      return
-    end
-
-    # 存在しないアソシエーションの参照を削除（エラー回避）
-    # @favorite_live_events = @user.favorite_live_events.order(date: :asc)
+    @favorite_live_events = @user.favorite_live_events.order(date: :asc)
   end
 
   def edit
