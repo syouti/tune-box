@@ -139,7 +139,7 @@ class FavoriteAlbumsController < ApplicationController
           errors << "アイテム#{index + 1}: 座標が範囲外です (x:#{x}, y:#{y})"
           next
         end
-        
+
         # 座標をキャンバス内に制限
         x = [0, [x, 560].min].max
         y = [0, [y, 592].min].max
