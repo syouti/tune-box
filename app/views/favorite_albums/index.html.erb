@@ -1257,24 +1257,34 @@ function updateOccupiedPositions() {
       });
     }
     
-    const posKey = `${album.dataset.gridX},${album.dataset.gridY}`;
+    let posKey = `${album.dataset.gridX},${album.dataset.gridY}`;
     
+    // 重複チェックと自動修正
     if (duplicateCheck.has(posKey)) {
       console.error(`❌ DUPLICATE POSITION DETECTED: ${posKey}`, {
         album: album.dataset.albumName,
         id: album.dataset.id
       });
       
-      const newPosition = findEmptyPosition();
+      // 新しい位置を見つける
+      let newPosition;
+      let attempts = 0;
+      do {
+        newPosition = findEmptyPosition();
+        posKey = `${newPosition.gridX},${newPosition.gridY}`;
+        attempts++;
+      } while (duplicateCheck.has(posKey) && attempts < 50);
+      
+      // アルバムの位置を更新
       album.style.left = newPosition.x + 'px';
       album.style.top = newPosition.y + 'px';
       album.dataset.gridX = newPosition.gridX;
       album.dataset.gridY = newPosition.gridY;
       
       console.log(`🔧 Auto-corrected to:`, newPosition);
-    } else {
-      duplicateCheck.add(posKey);
     }
+    
+    duplicateCheck.add(posKey);
     
     occupiedPositions.set(posKey, {
       albumId: album.dataset.id,
@@ -1299,8 +1309,9 @@ function updateOccupiedPositions() {
 
 // 空いている位置を見つける関数
 function findEmptyPosition() {
-  for (let y = 0; y < 5; y++) {
-    for (let x = 0; x < 5; x++) {
+  // より広い範囲で空いている位置を探す
+  for (let y = 0; y < 10; y++) {
+    for (let x = 0; x < 10; x++) {
       const posKey = `${x},${y}`;
       if (!occupiedPositions.has(posKey)) {
         return {
@@ -1313,8 +1324,16 @@ function findEmptyPosition() {
     }
   }
   
-  console.warn('⚠️ No empty positions available, returning (0,0)');
-  return { x: 0, y: 0, gridX: 0, gridY: 0 };
+  // それでも見つからない場合は、ランダムな位置を生成
+  const randomX = Math.floor(Math.random() * 5);
+  const randomY = Math.floor(Math.random() * 5);
+  console.warn(`⚠️ No empty positions available, using random position: (${randomX},${randomY})`);
+  return { 
+    x: randomX * 140, 
+    y: randomY * 148, 
+    gridX: randomX, 
+    gridY: randomY 
+  };
 }
 
 // アルバムリスト更新
