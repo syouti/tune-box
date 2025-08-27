@@ -32,13 +32,13 @@
                   position_x = album.position_x
                   position_y = album.position_y
                   grid_x = (position_x / 140).to_i
-                  grid_y = (position_y / 140).to_i
+                  grid_y = (position_y / 148).to_i
                 else
                   # デフォルト位置を計算
                   grid_x = index % 5
                   grid_y = (index / 5).floor
                   position_x = grid_x * 140
-                  position_y = grid_y * 140
+                  position_y = grid_y * 148
                 end
               %>
               <div class="album-jacket"
@@ -70,11 +70,6 @@
           <button class="btn btn-info preview-btn" onclick="previewShareImage()" id="previewBtn">
             <i class="fas fa-eye me-2"></i>プレビュー
           </button>
-          
-          <!-- 保存ボタン -->
-          <button class="btn btn-success ms-2" onclick="saveCollection()" id="saveBtn">
-            <i class="fas fa-save me-2"></i>保存
-          </button>
         </div>
       </div>
     </div>
@@ -90,7 +85,7 @@
           # 位置に基づいてソート（左上から右下へ）
           sorted_albums = @favorite_albums.sort_by do |album|
             if album.position_x.present? && album.position_y.present?
-              grid_y = (album.position_y / 140).to_i
+              grid_y = (album.position_y / 148).to_i
               grid_x = (album.position_x / 140).to_i
             else
               # デフォルト位置でソート
@@ -110,8 +105,8 @@
         <% end %>
       <% else %>
         <div class="empty-album-list">
-          <i class="fas fa-music fa-2x text-muted mb-3"></i>
-          <p class="text-muted">アルバムを追加するとここに表示されます</p>
+          <i class="fas fa-music fa-2x mb-3"></i>
+          <p>アルバムを追加するとここに表示されます</p>
         </div>
       <% end %>
     </div>
@@ -228,7 +223,7 @@
 
 <style>
 .collection-container {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(0, 0, 0, 0.95);
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.1);
@@ -306,12 +301,12 @@
 /* キャンバス */
 .collection-canvas {
   width: 700px;
-  height: 700px;
+  height: 742px;
   background-color: #000000;
   background-image:
       linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px);
-  background-size: 140px 140px;
+  background-size: 140px 148px;
   position: relative;
   border: 2px solid #333;
   border-radius: 15px;
@@ -319,25 +314,28 @@
 }
 
 .album-jacket {
-  position: absolute;
-  width: 140px;
-  height: 140px;
+  position: absolute !important;
+  width: 140px !important;
+  height: 148px !important;
   cursor: move;
-  border-radius: 0;
+  border-radius: 0 !important;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  background: white;
-  padding: 0;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
   user-select: none;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  overflow: hidden !important;
 }
 
 .album-jacket img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 0;
-  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 0 !important;
+  display: block !important;
+  object-position: center !important;
 }
 
 .album-jacket:hover {
@@ -512,16 +510,27 @@
   max-width: 150px; /* 🆕 最大幅を拡大 */
   min-width: 80px; /* 🆕 最小幅を確保 */
   text-align: right;
+}
+.empty-album-list {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  text-align: center !important;
+  color: white !important;
+  padding: 40px 20px !important;
+}
 
-.empty-album-list i{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  text-align: center;
-  color:white;
+.empty-album-list i {
+  color: white !important;
+  margin-bottom: 15px !important;
+}
 
+.empty-album-list p {
+  color: white !important;
+  margin: 0 !important;
+  font-size: 14px !important;
 }
 
 
@@ -574,7 +583,7 @@
 
 .modal-header {
   border-bottom: 1px solid #eee;
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  background: linear-gradient(135deg,rgb(255, 255, 255), #e9ecef);
   border-radius: 20px 20px 0 0;
 }
 
@@ -743,11 +752,43 @@ let dragOffset = { x: 0, y: 0 };
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🔧 Initializing collection page...');
   checkCSRFToken();
+  migrateExistingPositions(); // 既存位置データの移行
   updateOccupiedPositions();
   initializeDragAndDrop();
   updateAlbumList();
   initializeHoverLinks();
 });
+
+// 既存の位置データを新しい計算方法に移行
+function migrateExistingPositions() {
+  console.log('🔄 Migrating existing positions to new grid system...');
+  
+  const albums = document.querySelectorAll('.album-jacket');
+  let migratedCount = 0;
+  
+  albums.forEach(album => {
+    const currentTop = parseInt(album.style.top) || 0;
+    const currentLeft = parseInt(album.style.left) || 0;
+    
+    // 古い140px計算で保存された位置を検出
+    if (currentTop % 140 === 0 && currentTop < 700) {
+      const oldGridY = currentTop / 140;
+      const newTop = oldGridY * 148;
+      
+      // 位置を更新
+      album.style.top = newTop + 'px';
+      
+      // データ属性も更新
+      const gridY = Math.round(newTop / 148);
+      album.dataset.gridY = gridY;
+      
+      console.log(`🔄 Migrated album "${album.dataset.albumName}": ${currentTop}px → ${newTop}px (gridY: ${gridY})`);
+      migratedCount++;
+    }
+  });
+  
+  console.log(`✅ Position migration completed: ${migratedCount} albums migrated`);
+}
 
 // CSRF トークンの状態確認
 function checkCSRFToken() {
@@ -863,16 +904,16 @@ function initializeDragAndDrop() {
     const newY = e.clientY - canvasRect.top - dragOffset.y;
 
     const boundedX = Math.max(0, Math.min(560, newX));
-    const boundedY = Math.max(0, Math.min(560, newY));
+    const boundedY = Math.max(0, Math.min(592, newY));
 
     const gridX = Math.round(boundedX / 140);
-    const gridY = Math.round(boundedY / 140);
+    const gridY = Math.round(boundedY / 148);
     
     const clampedGridX = Math.max(0, Math.min(4, gridX));
     const clampedGridY = Math.max(0, Math.min(4, gridY));
     
     const snapX = clampedGridX * 140;
-    const snapY = clampedGridY * 140;
+    const snapY = clampedGridY * 148;
     
     currentElement.style.left = snapX + 'px';
     currentElement.style.top = snapY + 'px';
@@ -946,7 +987,7 @@ function initializeDragAndDrop() {
 // アルバム交換処理
 function executeAlbumSwap(movingAlbum, targetAlbum, originalGridX, originalGridY) {
   targetAlbum.style.left = (originalGridX * 140) + 'px';
-  targetAlbum.style.top = (originalGridY * 140) + 'px';
+  targetAlbum.style.top = (originalGridY * 148) + 'px';
   targetAlbum.dataset.gridX = originalGridX;
   targetAlbum.dataset.gridY = originalGridY;
   
@@ -1139,7 +1180,7 @@ function performPositionSave(layoutData, albumElements) {
     albumElements.forEach(element => {
       if (element.dataset.originalGridX && element.dataset.originalGridY) {
         const originalX = parseInt(element.dataset.originalGridX) * 140;
-        const originalY = parseInt(element.dataset.originalGridY) * 140;
+        const originalY = parseInt(element.dataset.originalGridY) * 148;
         element.style.left = originalX + 'px';
         element.style.top = originalY + 'px';
         element.dataset.gridX = element.dataset.originalGridX;
@@ -1205,7 +1246,7 @@ function updateOccupiedPositions() {
       const styleX = parseInt(album.style.left) || 0;
       const styleY = parseInt(album.style.top) || 0;
       const correctedGridX = Math.round(styleX / 140);
-      const correctedGridY = Math.round(styleY / 140);
+      const correctedGridY = Math.round(styleY / 148);
       
       album.dataset.gridX = correctedGridX;
       album.dataset.gridY = correctedGridY;
@@ -1264,7 +1305,7 @@ function findEmptyPosition() {
       if (!occupiedPositions.has(posKey)) {
         return {
           x: x * 140,
-          y: y * 140,
+          y: y * 148,
           gridX: x,
           gridY: y
         };
@@ -1284,8 +1325,8 @@ function updateAlbumList() {
   if (albums.length === 0) {
     albumList.innerHTML = `
       <div class="empty-album-list">
-        <i class="fas fa-music fa-2x text-muted mb-3"></i>
-        <p class="text-muted">アルバムを追加するとここに表示されます</p>
+        <i class="fas fa-music fa-2x mb-3"></i>
+        <p>アルバムを追加するとここに表示されます</p>
       </div>
     `;
     return;
@@ -1375,17 +1416,51 @@ function removeAlbum(btn, spotifyId) {
   }
 }
 
+// シェアテキスト生成関数
+function generateShareText() {
+  const albums = document.querySelectorAll('.album-jacket');
+  const albumCount = albums.length;
+  
+  if (albumCount === 0) {
+    return "TuneBoxで名盤リストを作成中！ #TuneBox #名盤リスト #音楽";
+  }
+  
+  // アルバム名を取得（最大3つまで）
+  const albumNames = [];
+  albums.forEach((album, index) => {
+    if (index < 3) {
+      const albumName = album.dataset.albumName;
+      if (albumName) {
+        albumNames.push(albumName);
+      }
+    }
+  });
+  
+  let text = "TuneBoxで作成した名盤リスト：";
+  if (albumNames.length > 0) {
+    text += albumNames.join("、");
+    if (albumCount > 3) {
+      text += ` 他${albumCount - 3}枚`;
+    }
+  } else {
+    text += `${albumCount}枚のアルバム`;
+  }
+  
+  text += " #TuneBox #名盤リスト #音楽";
+  
+  return text;
+}
+
 // SNS共有機能
 function shareToTwitter() {
-  const albumCount = document.querySelectorAll('.album-jacket').length;
-  const text = `私の名盤リスト（${albumCount}枚）を作成しました！ #TuneBox #名盤リスト #音楽好きと繋がりたい`;
+  const text = generateShareText();
   const url = window.location.href;
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
   window.open(twitterUrl, '_blank', 'width=600,height=400');
 }
 
 function shareToInstagram() {
-  const text = `私の名盤リストをチェックしてみて！ ${window.location.href} #TuneBox #名盤リスト`;
+  const text = generateShareText() + "\n\n" + window.location.href;
   
   if (navigator.userAgent.includes('Mobile')) {
     window.open('instagram://app', '_blank');
@@ -1397,8 +1472,7 @@ function shareToInstagram() {
 }
 
 function shareToLine() {
-  const albumCount = document.querySelectorAll('.album-jacket').length;
-  const text = `私の名盤リスト（${albumCount}枚）を見てみて！`;
+  const text = generateShareText();
   const url = window.location.href;
   const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text + '\n' + url)}`;
   window.open(lineUrl, '_blank');
@@ -1450,18 +1524,18 @@ function copyLink() {
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
-                      <div class="modal-body p-3">
-                        <div class="collection-container" style="margin: 0;">
-                          <div class="main-content-area" style="gap: 20px;">
+                      <div class="modal-body p-3" style="background: transparent;">
+                        <div class="collection-container" style="margin: 0; background: transparent;">
+                          <div class="main-content-area" style="gap: 20px; background: transparent;">
                             <div class="canvas-section">
                               <div class="canvas-wrapper">
-                                <div class="collection-canvas" id="previewCanvas" style="width: 700px; height: 700px;">
+                                <div class="collection-canvas" id="previewCanvas" style="width: 700px; height: 742px; background-color: #000000;">
                                   ${canvas.innerHTML}
                                 </div>
                               </div>
                             </div>
                             <div class="ranking-section" style="min-width: 400px;">
-                              <div class="ranking-container" style="height: 742px;">
+                              <div class="ranking-container" style="height: 742px; background: #000000;">
                                 <div class="album-list" id="previewAlbumList">
                                   ${albumList.innerHTML}
                                 </div>
@@ -1472,8 +1546,11 @@ function copyLink() {
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
-                        <button type="button" class="btn btn-success share-sns-btn" onclick="shareToSNS()">
-                          <i class="fas fa-share-alt me-2"></i>SNSでシェア
+                        <button type="button" class="btn btn-info me-2" onclick="captureScreenshot()">
+                          <i class="fas fa-camera me-2"></i>スクリーンショット
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="shareWithImage()">
+                          <i class="fas fa-image me-2"></i>画像付きシェア
                         </button>
                       </div>
                     </div>
@@ -1501,6 +1578,60 @@ function copyLink() {
                   btn.style.display = 'none';
                 });
               }, 100);
+            }
+
+            // スクリーンショット機能
+            function captureScreenshot() {
+              const previewModal = document.getElementById('previewModal');
+              if (!previewModal) {
+                showMessage('プレビューモーダルが見つかりません', 'error');
+                return;
+              }
+
+              // スクリーンショットボタンを無効化
+              const screenshotBtn = event.target;
+              const originalText = screenshotBtn.innerHTML;
+              screenshotBtn.disabled = true;
+              screenshotBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>撮影中...';
+
+              // モーダルのbody部分（キャンバスとアルバムリスト）のみをスクリーンショット
+              const modalBody = previewModal.querySelector('.modal-body');
+              if (!modalBody) {
+                showMessage('モーダルの内容が見つかりません', 'error');
+                screenshotBtn.disabled = false;
+                screenshotBtn.innerHTML = originalText;
+                return;
+              }
+
+              html2canvas(modalBody, {
+                backgroundColor: 'transparent',
+                scale: 2, // 高解像度
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                width: modalBody.scrollWidth,
+                height: modalBody.scrollHeight
+              }).then(canvas => {
+                // 画像をダウンロード
+                const link = document.createElement('a');
+                link.download = `tunebox_preview_${new Date().getTime()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+
+                // 成功メッセージを表示
+                showMessage('スクリーンショットをダウンロードしました！', 'success');
+
+                // ボタンを元に戻す
+                screenshotBtn.disabled = false;
+                screenshotBtn.innerHTML = originalText;
+              }).catch(error => {
+                console.error('Screenshot error:', error);
+                showMessage('スクリーンショットの撮影に失敗しました', 'error');
+
+                // ボタンを元に戻す
+                screenshotBtn.disabled = false;
+                screenshotBtn.innerHTML = originalText;
+              });
             }
 
             // 画像生成機能（ダウンロード用）
@@ -1558,10 +1689,117 @@ function copyLink() {
               showSNSShareModal();
             }
 
+            // 画像付きSNSシェア機能
+            function shareWithImage() {
+              const previewModal = document.getElementById('previewModal');
+              if (!previewModal) {
+                showMessage('プレビューモーダルが見つかりません', 'error');
+                return;
+              }
+
+              // モーダルのbody部分（キャンバスとアルバムリスト）のみをスクリーンショット
+              const modalBody = previewModal.querySelector('.modal-body');
+              if (!modalBody) {
+                showMessage('モーダルの内容が見つかりません', 'error');
+                return;
+              }
+
+              // スクリーンショットを撮影してSNSシェア
+              html2canvas(modalBody, {
+                backgroundColor: 'transparent',
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                width: modalBody.scrollWidth,
+                height: modalBody.scrollHeight
+              }).then(canvas => {
+                // 画像をBlobに変換
+                canvas.toBlob(blob => {
+                  // 画像付きSNSシェアモーダルを表示
+                  showImageShareModal(blob);
+                }, 'image/png');
+              }).catch(error => {
+                console.error('Screenshot error:', error);
+                showMessage('スクリーンショットの撮影に失敗しました', 'error');
+              });
+            }
+
+            // 画像付きSNSシェアモーダルを表示
+            function showImageShareModal(imageBlob) {
+              const shareText = generateShareText();
+              const shareUrl = window.location.href;
+              
+              // 画像のプレビューURLを作成
+              const imageUrl = URL.createObjectURL(imageBlob);
+              
+              const modalHTML = `
+                <div class="modal fade" id="imageShareModal" tabindex="-1" aria-labelledby="imageShareModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="imageShareModalLabel">
+                          <i class="fas fa-image me-2"></i>画像付きSNSシェア
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="row">
+                          <div class="col-md-6">
+                            <h6><i class="fas fa-image me-2"></i>シェア画像</h6>
+                            <img src="${imageUrl}" class="img-fluid border rounded" alt="シェア画像">
+                          </div>
+                          <div class="col-md-6">
+                            <h6><i class="fas fa-share-alt me-2"></i>シェア内容</h6>
+                            <div class="alert alert-info">
+                              <p class="mb-2"><strong>投稿内容:</strong></p>
+                              <p class="mb-2">${shareText}</p>
+                              <p class="mb-0"><small class="text-muted">URL: ${shareUrl}</small></p>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                              <button type="button" class="btn btn-outline-primary" onclick="downloadAndShare('twitter', '${imageUrl}')">
+                                <i class="fab fa-twitter me-2"></i>X (Twitter)でシェア
+                              </button>
+                              <button type="button" class="btn btn-outline-danger" onclick="downloadAndShare('instagram', '${imageUrl}')">
+                                <i class="fab fa-instagram me-2"></i>Instagramでシェア
+                              </button>
+                              <button type="button" class="btn btn-outline-success" onclick="downloadAndShare('line', '${imageUrl}')">
+                                <i class="fab fa-line me-2"></i>LINEでシェア
+                              </button>
+                              <button type="button" class="btn btn-outline-secondary" onclick="downloadImage('${imageUrl}')">
+                                <i class="fas fa-download me-2"></i>画像をダウンロード
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+
+              // 既存のモーダルを削除
+              const existingModal = document.getElementById('imageShareModal');
+              if (existingModal) {
+                existingModal.remove();
+              }
+
+              // 新しいモーダルを追加
+              document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+              // モーダルを表示
+              const modal = new bootstrap.Modal(document.getElementById('imageShareModal'));
+              modal.show();
+            }
+
             // SNS共有モーダルを表示
             function showSNSShareModal() {
               const albumCount = document.querySelectorAll('.album-jacket').length;
-              const shareText = `私の名盤リスト（${albumCount}枚）を作成しました！ #TuneBox #名盤リスト #音楽好きと繋がりたい`;
+              const shareText = generateShareText();
               const shareUrl = window.location.href;
               
               const modalHTML = `
@@ -1576,6 +1814,16 @@ function copyLink() {
                       </div>
                       <div class="modal-body">
                         <p class="text-muted mb-4">お気に入りのSNSで名盤リストをシェアしましょう！</p>
+                        
+                        <!-- シェア内容プレビュー -->
+                        <div class="alert alert-info mb-4">
+                          <h6><i class="fas fa-eye me-2"></i>シェア内容プレビュー</h6>
+                          <div class="border rounded p-3 bg-light">
+                            <p class="mb-2"><strong>投稿内容:</strong></p>
+                            <p class="mb-2">${shareText}</p>
+                            <p class="mb-0"><small class="text-muted">URL: ${shareUrl}</small></p>
+                          </div>
+                        </div>
                         
                         <div class="row g-3">
                           <div class="col-6">
@@ -1682,9 +1930,8 @@ ${shareUrl}</textarea>
 
             // シェアテキストをコピー
             function copyShareText() {
-              const textArea = document.getElementById('shareTextArea');
-              textArea.select();
-              navigator.clipboard.writeText(textArea.value).then(() => {
+              const text = generateShareText() + "\n\n" + window.location.href;
+              navigator.clipboard.writeText(text).then(() => {
                 showMessage('シェアテキストをクリップボードにコピーしました！', 'success');
               }).catch(() => {
                 showMessage('テキストのコピーに失敗しました', 'error');
@@ -1692,6 +1939,52 @@ ${shareUrl}</textarea>
               
               // モーダルを閉じる
               const modal = bootstrap.Modal.getInstance(document.getElementById('snsShareModal'));
+              if (modal) modal.hide();
+            }
+
+            // 画像ダウンロード機能
+            function downloadImage(imageUrl) {
+              const link = document.createElement('a');
+              link.href = imageUrl;
+              link.download = `tunebox_share_${new Date().getTime()}.png`;
+              link.click();
+              showMessage('画像をダウンロードしました！', 'success');
+            }
+
+            // 画像付きSNSシェア機能
+            function downloadAndShare(platform, imageUrl) {
+              // 画像をダウンロード
+              downloadImage(imageUrl);
+              
+              // プラットフォーム別のシェア処理
+              const shareText = generateShareText();
+              const shareUrl = window.location.href;
+              
+              switch(platform) {
+                case 'twitter':
+                  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+                  window.open(twitterUrl, '_blank', 'width=600,height=400');
+                  showMessage('画像をダウンロードしました。X (Twitter)で画像を添付して投稿してください。', 'info');
+                  break;
+                case 'instagram':
+                  if (navigator.userAgent.includes('Mobile')) {
+                    window.open('instagram://app', '_blank');
+                    showMessage('画像をダウンロードしました。Instagramアプリで画像を添付して投稿してください。', 'info');
+                  } else {
+                    navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`).then(() => {
+                      showMessage('画像をダウンロードしました。Instagramで画像を添付して投稿してください。', 'info');
+                    });
+                  }
+                  break;
+                case 'line':
+                  const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText + '\n\n' + shareUrl)}`;
+                  window.open(lineUrl, '_blank');
+                  showMessage('画像をダウンロードしました。LINEで画像を添付して投稿してください。', 'info');
+                  break;
+              }
+              
+              // モーダルを閉じる
+              const modal = bootstrap.Modal.getInstance(document.getElementById('imageShareModal'));
               if (modal) modal.hide();
             }
 

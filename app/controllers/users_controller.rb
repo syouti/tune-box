@@ -15,8 +15,8 @@ class UsersController < ApplicationController
   end
 
   def show
-    @user = User.find(params[:id])
-    @favorite_live_events = @user.favorite_live_events.order(date: :asc)
+    # マイページはキャンバスページにリダイレクト
+    redirect_to favorite_albums_path
   end
 
   def edit
@@ -33,7 +33,7 @@ class UsersController < ApplicationController
     end
 
     if @user.update(user_params)
-      redirect_to user_path(@user), notice: 'プロフィールが正常に更新されました'
+      redirect_to favorite_albums_path, notice: 'プロフィールが正常に更新されました'
     else
       render :edit
     end
