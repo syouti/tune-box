@@ -133,14 +133,20 @@ class FavoriteAlbumsController < ApplicationController
         x = item[:x].to_i
         y = item[:y].to_i
 
-        if x < 0 || x > 560 || y < 0 || y > 560
+        # キャンバスサイズ: 700px x 742px (5x5グリッド)
+        # より柔軟な範囲チェック（少し余裕を持たせる）
+        if x < -50 || x > 610 || y < -50 || y > 642
           errors << "アイテム#{index + 1}: 座標が範囲外です (x:#{x}, y:#{y})"
           next
         end
+        
+        # 座標をキャンバス内に制限
+        x = [0, [x, 560].min].max
+        y = [0, [y, 592].min].max
 
         # 重複チェック
         grid_x = (x / 140).round
-        grid_y = (y / 140).round
+        grid_y = (y / 148).round
         position_key = "#{grid_x},#{grid_y}"
 
         if positions_used.include?(position_key)
