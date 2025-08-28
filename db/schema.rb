@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_08_23_160321) do
+ActiveRecord::Schema[7.2].define(version: 2025_08_28_000002) do
   create_table "albums", force: :cascade do |t|
     t.string "spotify_id"
     t.string "name"
@@ -53,7 +53,15 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_23_160321) do
     t.integer "position_x"
     t.integer "position_y"
     t.integer "position", default: 1
+    t.boolean "created_by_premium_user", default: false
+    t.integer "share_count", default: 0
+    t.datetime "last_shared_at"
+    t.index ["created_at"], name: "index_favorite_albums_on_created_at"
+    t.index ["created_by_premium_user"], name: "index_favorite_albums_on_created_by_premium_user"
     t.index ["position"], name: "index_favorite_albums_on_position"
+    t.index ["spotify_id"], name: "index_favorite_albums_on_spotify_id"
+    t.index ["user_id", "spotify_id"], name: "index_favorite_albums_on_user_id_and_spotify_id", unique: true
+    t.index ["user_id"], name: "index_favorite_albums_on_user_id"
   end
 
   create_table "favorites", force: :cascade do |t|
@@ -77,6 +85,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_23_160321) do
     t.string "prefecture"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["artist"], name: "index_live_events_on_artist"
+    t.index ["created_at"], name: "index_live_events_on_created_at"
+    t.index ["date"], name: "index_live_events_on_date"
+    t.index ["venue"], name: "index_live_events_on_venue"
   end
 
   create_table "users", force: :cascade do |t|
@@ -85,7 +97,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_23_160321) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "premium", default: false
+    t.string "subscription_status", default: "free"
+    t.string "stripe_customer_id"
+    t.string "subscription_id"
+    t.datetime "trial_ends_at"
+    t.datetime "last_login_at"
+    t.integer "login_count", default: 0
+    t.index ["created_at"], name: "index_users_on_created_at"
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["premium"], name: "index_users_on_premium"
+    t.index ["stripe_customer_id"], name: "index_users_on_stripe_customer_id"
   end
 
   add_foreign_key "collection_items", "albums"
