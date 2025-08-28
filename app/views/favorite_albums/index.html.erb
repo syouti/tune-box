@@ -751,6 +751,12 @@ let dragOffset = { x: 0, y: 0 };
 
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🔧 Initializing collection page...');
+  
+  // Google Analytics ページビュートラッキング
+  if (typeof Analytics !== 'undefined') {
+    Analytics.trackPageView('Collection Canvas');
+  }
+  
   checkCSRFToken();
   migrateExistingPositions(); // 既存位置データの移行
   updateOccupiedPositions();
@@ -1636,6 +1642,11 @@ function copyLink() {
                 link.download = `tunebox_preview_${new Date().getTime()}.png`;
                 link.href = canvas.toDataURL();
                 link.click();
+
+                // Google Analytics イベント送信
+                if (typeof Analytics !== 'undefined') {
+                  Analytics.trackScreenshot();
+                }
 
                 // 成功メッセージを表示
                 showMessage('スクリーンショットをダウンロードしました！', 'success');

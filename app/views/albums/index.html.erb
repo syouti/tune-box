@@ -2,13 +2,14 @@
   <h1> アルバム検索</h1>
 
   <!-- 検索フォーム -->
-  <%= form_with url: albums_index_path, method: :get, local: true, class: "mb-4" do |form| %>
+  <%= form_with url: albums_index_path, method: :get, local: true, class: "mb-4", id: "search-form" do |form| %>
     <div class="input-group">
       <%= form.text_field :search,
           value: @search_query,
           placeholder: "アーティスト名やアルバム名で検索...",
-          class: "form-control form-control-lg" %>
-      <%= form.submit "検索", class: "btn btn-primary btn-lg" %>
+          class: "form-control form-control-lg",
+          id: "search-input" %>
+      <%= form.submit "検索", class: "btn btn-primary btn-lg", onclick: "trackSearch()" %>
     </div>
   <% end %>
 
@@ -169,12 +170,27 @@ let currentFavoriteCount = 0;
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🔧 Initializing search page...');
   
+  // Google Analytics ページビュートラッキング
+  if (typeof Analytics !== 'undefined') {
+    Analytics.trackPageView('Album Search');
+  }
+  
   // お気に入り数を読み込み
   loadFavoriteCount();
   
   // 既存のお気に入りを確認
   checkExistingFavorites();
 });
+
+// 検索イベントトラッキング
+function trackSearch() {
+  const searchInput = document.getElementById('search-input');
+  const query = searchInput ? searchInput.value.trim() : '';
+  
+  if (query && typeof Analytics !== 'undefined') {
+    Analytics.trackSearch(query);
+  }
+}
 
 // 🆕 お気に入り数を読み込む
 function loadFavoriteCount() {
@@ -318,6 +334,11 @@ function addFavorite(button) {
     button.disabled = false;
     
     if (data.status === 'added') {
+      // Google Analytics イベント送信
+      if (typeof Analytics !== 'undefined') {
+        Analytics.trackAlbumAdd(albumData.name);
+      }
+      
       currentFavoriteCount = data.current_count;
       updateFavoriteCounter();
       updateButtonToRemove(button);
