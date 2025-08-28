@@ -79,12 +79,12 @@ Rails.application.configure do
     .then { |logger| ActiveSupport::TaggedLogging.new(logger) }
 
   # Prepend all log lines with the following tags.
-  # config.log_tags = [ :request_id ]
+  config.log_tags = [:request_id, :remote_ip, :user_agent]
 
   # "info" includes generic and useful information about system operation, but avoids logging too much
   # information to avoid inadvertent exposure of personally identifiable information (PII). If you
   # want to log everything, set the level to "debug".
-  # config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
+  config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
   # Use a different cache store in production.
   # config.cache_store = :mem_cache_store

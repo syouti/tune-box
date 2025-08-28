@@ -45,7 +45,7 @@ Rails.application.routes.draw do
   delete 'logout', to: 'sessions#destroy'
   get 'logout', to: 'sessions#destroy'
 
-  # Health check
+    # Health check
   get "up" => "rails/health#show", as: :rails_health_check
   get "health" => "health#check"
 end
