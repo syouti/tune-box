@@ -104,7 +104,7 @@ Rails.application.configure do
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.perform_deliveries = true
   config.action_mailer.raise_delivery_errors = true
-  
+
   config.action_mailer.smtp_settings = {
     address: ENV['SMTP_ADDRESS'],
     port: ENV['SMTP_PORT'],
@@ -114,7 +114,7 @@ Rails.application.configure do
     authentication: 'plain',
     enable_starttls_auto: true
   }
-  
+
   config.action_mailer.default_from = ENV['MAIL_FROM'] || 'TuneBox <noreply@tunebox.jp>'
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
