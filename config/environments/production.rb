@@ -14,14 +14,15 @@ Rails.application.configure do
 
   # Full error reports are disabled and caching is turned on.
   config.consider_all_requests_local = false
-  # アセット最適化設定
-  config.assets.compile = false
-  config.assets.digest = true
+  
+  # アセット最適化設定（最小限）
+  config.assets.compile = true
+  config.assets.digest = false
   config.assets.version = '1.0'
 
-  # キャッシュ設定
-  config.action_controller.perform_caching = true
-  config.cache_store = :memory_store, { size: 64.megabytes }
+  # キャッシュ設定（最小限）
+  config.action_controller.perform_caching = false
+  config.cache_store = :null_store
 
   # ログ設定（最小限）
   config.log_level = :error
@@ -65,7 +66,7 @@ Rails.application.configure do
   # config.assume_ssl = true
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  config.force_ssl = true
+  # config.force_ssl = true
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
@@ -118,11 +119,11 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
 
   # Enable DNS rebinding protection and other `Host` header attacks.
-  config.hosts = [
-    "tunebox.jp",     # メインドメイン
-    "www.tunebox.jp", # wwwサブドメイン
-    /.*\.tunebox\.jp/ # その他のサブドメインも許可
-  ]
+  # config.hosts = [
+  #   "tunebox.jp",     # メインドメイン
+  #   "www.tunebox.jp", # wwwサブドメイン
+  #   /.*\.tunebox\.jp/ # その他のサブドメインも許可
+  # ]
   # Skip DNS rebinding protection for the default health check endpoint.
-  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end
