@@ -7,8 +7,10 @@ class UsersController < ApplicationController
     @user = User.new(user_params)
 
     if @user.save
-      session[:user_id] = @user.id
-      redirect_to favorite_albums_path, notice: 'アカウントが正常に作成されました！TuneBoxへようこそ。キャンバスページに移動しました。'
+      # メール確認を送信
+      @user.send_confirmation_email
+
+      redirect_to login_path, notice: 'アカウントが作成されました！メールアドレスの確認をお願いします。'
     else
       render :new
     end

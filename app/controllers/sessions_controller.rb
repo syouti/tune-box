@@ -7,13 +7,12 @@ class SessionsController < ApplicationController
     user = User.find_by(email: params[:session][:email].downcase)
 
     if user && user.authenticate(params[:session][:password])
-      # メール確認チェック（一時的に無効化）
-      # unless user.confirmed?
-      #   flash.now[:alert] = 'メールアドレスの確認が必要です。確認メールを再送信しました。'
-      #   user.send_confirmation_email
-      #   render :new
-      #   return
-      # end
+      unless user.confirmed?
+        flash.now[:alert] = 'メールアドレスの確認が必要です。確認メールを再送信しました。'
+        user.send_confirmation_email
+        render :new
+        return
+      end
 
       # セッション固定攻撃対策
       reset_session
