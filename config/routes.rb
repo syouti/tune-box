@@ -48,4 +48,10 @@ Rails.application.routes.draw do
     # Health check
   get "up" => "rails/health#show", as: :rails_health_check
   get "health" => "health#check"
+  get "health/detailed" => "health#detailed"
+  
+  # エラーハンドリング
+  match "/404", to: "errors#not_found", via: :all
+  match "/500", to: "errors#internal_server_error", via: :all
+  match "/422", to: "errors#unprocessable_entity", via: :all
 end

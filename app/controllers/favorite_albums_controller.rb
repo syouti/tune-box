@@ -5,10 +5,10 @@ class FavoriteAlbumsController < ApplicationController
   def index
     start_time = Time.current
     @favorite_albums = current_user.favorite_albums.order(:created_at)
-    
+
     log_user_action('view_canvas', { album_count: @favorite_albums.count })
     log_performance('canvas_load', ((Time.current - start_time) * 1000).round)
-    
+
     respond_to do |format|
       format.html
       format.json { render json: @favorite_albums }
@@ -17,11 +17,11 @@ class FavoriteAlbumsController < ApplicationController
 
   # 🆕 検索ページからの追加/削除用のtoggleメソッド
   def toggle
-
     current_count = current_user.favorite_albums.count
 
     # パラメータのバリデーション
     unless params[:favorite_album]
+      log_error(StandardError.new('Missing favorite_album parameter'), { action: 'toggle' })
       render json: {
         status: 'error',
         message: 'データが不正です'
@@ -29,10 +29,11 @@ class FavoriteAlbumsController < ApplicationController
       return
     end
 
-    spotify_id = params[:favorite_album][:spotify_id]
+    spotify_id = sanitize_spotify_id(params[:favorite_album][:spotify_id])
 
     # Spotify IDの検証
-    if spotify_id.blank?
+    if spotify_id.blank? || !valid_spotify_id?(spotify_id)
+      log_error(StandardError.new('Invalid Spotify ID'), { action: 'toggle', spotify_id: spotify_id })
       render json: {
         status: 'error',
         message: 'Spotify IDが無効です'
@@ -45,10 +46,10 @@ class FavoriteAlbumsController < ApplicationController
     if existing_album
       # 削除処理
       if existing_album.destroy
-        log_user_action('remove_album', { 
-          album_id: existing_album.id, 
+        log_user_action('remove_album', {
+          album_id: existing_album.id,
           album_name: existing_album.name,
-          current_count: current_user.favorite_albums.count 
+          current_count: current_user.favorite_albums.count
         })
         render json: {
           status: 'removed',
@@ -75,22 +76,22 @@ class FavoriteAlbumsController < ApplicationController
       # 次の空いている位置を見つける
       position = find_next_available_position
 
-      # アルバムを作成
+      # アルバムを作成（サニタイズ済みデータ）
       favorite_album = current_user.favorite_albums.build(
         spotify_id: spotify_id,
-        name: params[:favorite_album][:name],
-        artist: params[:favorite_album][:artist],
-        image_url: params[:favorite_album][:image_url],
-        external_url: params[:favorite_album][:external_url],
-        release_date: params[:favorite_album][:release_date],
-        total_tracks: params[:favorite_album][:total_tracks],
+        name: sanitize_input(params[:favorite_album][:name]),
+        artist: sanitize_input(params[:favorite_album][:artist]),
+        image_url: sanitize_input(params[:favorite_album][:image_url]),
+        external_url: sanitize_input(params[:favorite_album][:external_url]),
+        release_date: sanitize_input(params[:favorite_album][:release_date]),
+        total_tracks: params[:favorite_album][:total_tracks]&.to_i,
         position_x: position[:x],
         position_y: position[:y]
       )
 
       if favorite_album.save
-        log_user_action('add_album', { 
-          album_id: favorite_album.id, 
+        log_user_action('add_album', {
+          album_id: favorite_album.id,
           album_name: favorite_album.name,
           artist: favorite_album.artist,
           current_count: current_user.favorite_albums.count,
@@ -333,6 +334,23 @@ class FavoriteAlbumsController < ApplicationController
   end
 
   private
+
+  # セキュリティ: Spotify IDのサニタイズ
+  def sanitize_spotify_id(spotify_id)
+    return nil if spotify_id.blank?
+    spotify_id.to_s.strip.gsub(/[^a-zA-Z0-9]/, '')
+  end
+
+  # セキュリティ: Spotify IDの検証
+  def valid_spotify_id?(spotify_id)
+    spotify_id.present? && spotify_id.match?(/\A[a-zA-Z0-9]{22}\z/)
+  end
+
+  # セキュリティ: 入力値のサニタイズ
+  def sanitize_input(value)
+    return nil if value.blank?
+    ActionController::Base.helpers.sanitize(value.to_s.strip, tags: [])
+  end
 
   def require_login
     unless current_user
