@@ -14,10 +14,9 @@ class User < ApplicationRecord
   # セキュリティ: データのサニタイズ
   before_save :sanitize_data
 
-  # メール確認機能（一時的に無効化）
+  # メール確認機能
   def confirmed?
-    # confirmed_at.present?
-    true  # 一時的にすべてのユーザーを確認済みとして扱う
+    confirmed_at.present?
   end
 
   def send_confirmation_email

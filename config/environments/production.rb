@@ -66,7 +66,7 @@ Rails.application.configure do
   # config.assume_ssl = true
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  config.force_ssl = true
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
@@ -99,11 +99,23 @@ Rails.application.configure do
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
-    # 本番環境のメール設定（一時的に無効化）
+    # 本番環境のメール設定
   config.action_mailer.default_url_options = { host: 'tunebox.jp', protocol: 'https' }
-  config.action_mailer.delivery_method = :test
-  config.action_mailer.perform_deliveries = false
-  config.action_mailer.raise_delivery_errors = false
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = true
+  
+  config.action_mailer.smtp_settings = {
+    address: ENV['SMTP_ADDRESS'],
+    port: ENV['SMTP_PORT'],
+    domain: ENV['SMTP_DOMAIN'],
+    user_name: ENV['SMTP_USERNAME'],
+    password: ENV['SMTP_PASSWORD'],
+    authentication: 'plain',
+    enable_starttls_auto: true
+  }
+  
+  config.action_mailer.default_from = ENV['MAIL_FROM'] || 'TuneBox <noreply@tunebox.jp>'
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
@@ -119,11 +131,11 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
 
   # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "tunebox.jp",     # メインドメイン
-  #   "www.tunebox.jp", # wwwサブドメイン
-  #   /.*\.tunebox\.jp/ # その他のサブドメインも許可
-  # ]
+  config.hosts = [
+    "tunebox.jp",     # メインドメイン
+    "www.tunebox.jp", # wwwサブドメイン
+    /.*\.tunebox\.jp/ # その他のサブドメインも許可
+  ]
   # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end
