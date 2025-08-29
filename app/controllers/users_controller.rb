@@ -6,19 +6,17 @@ class UsersController < ApplicationController
   def create
     @user = User.new(user_params)
 
-        if @user.save
-      # メール確認を送信
-      @user.send_confirmation_email
-
-      redirect_to login_path, notice: 'アカウントが作成されました！メールアドレスの確認をお願いします。'
+    if @user.save
+      session[:user_id] = @user.id
+      redirect_to favorite_albums_path, notice: 'アカウントが正常に作成されました！TuneBoxへようこそ。キャンバスページに移動しました。'
     else
       render :new
     end
   end
 
   def show
-    # マイページはキャンバスページにリダイレクト
-    redirect_to favorite_albums_path
+    @user = User.find(params[:id])
+    @favorite_live_events = @user.favorite_live_events.order(date: :asc)
   end
 
   def edit
@@ -35,7 +33,7 @@ class UsersController < ApplicationController
     end
 
     if @user.update(user_params)
-      redirect_to favorite_albums_path, notice: 'プロフィールが正常に更新されました'
+      redirect_to user_path(@user), notice: 'プロフィールが正常に更新されました'
     else
       render :edit
     end
