@@ -57,7 +57,7 @@ namespace :backup do
       puts "📋 最新バックアップ: #{latest_backup}"
       puts "📅 作成日時: #{latest_backup.mtime}"
       puts "📏 ファイルサイズ: #{latest_backup.size} bytes"
-      
+
       # ファイルの内容チェック
       content = File.read(latest_backup)
       if content.include?("CREATE TABLE")
