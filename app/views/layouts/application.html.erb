@@ -30,6 +30,10 @@
 
       gtag('config', 'G-Y9B2RHTCH7');
     </script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5685437449602998"
+     crossorigin="anonymous"></script>
     
 
     <style>
@@ -147,6 +151,38 @@
         color: rgba(255, 255, 255, 1) !important;
         text-decoration: underline !important;
       }
+
+      /* Google AdSense 広告スタイル */
+      .ad-container {
+        text-align: center;
+        margin: 20px 0;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+      }
+
+      .ad-container.adsbygoogle {
+        display: block;
+        margin: 20px auto;
+      }
+
+      .ad-sidebar {
+        position: sticky;
+        top: 20px;
+        margin-top: 20px;
+      }
+
+      .ad-responsive {
+        display: block;
+        text-align: center;
+        overflow: hidden;
+      }
+
+      .ad-responsive ins {
+        display: block;
+        margin: 0 auto;
+      }
     </style>
   </head>
 
@@ -215,6 +251,19 @@
           <%= yield %>
         </div>
       </div>
+    </div>
+
+    <!-- Google AdSense フッター広告 -->
+    <div class="ad-container">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-5685437449602998"
+           data-ad-slot="1234567890"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>
+           (adsbygoogle = window.adsbygoogle || []).push({});
+      </script>
     </div>
 
     <!-- 🆕 フッター修正版 -->
