@@ -1,7 +1,7 @@
 # app/controllers/favorite_albums_controller.rb
 class FavoriteAlbumsController < ApplicationController
   before_action :require_login
-  before_action :require_confirmed_user
+  # before_action :require_confirmed_user
 
   def index
     start_time = Time.current
