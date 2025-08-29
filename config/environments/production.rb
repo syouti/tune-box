@@ -14,7 +14,7 @@ Rails.application.configure do
 
   # Full error reports are disabled and caching is turned on.
   config.consider_all_requests_local = false
-  
+
   # アセット最適化設定（最小限）
   config.assets.compile = true
   config.assets.digest = false
