@@ -3,12 +3,12 @@ class SessionsController < ApplicationController
     # ログインフォームを表示
   end
 
-  def create
+    def create
     user = User.find_by(email: params[:session][:email].downcase)
 
     if user && user.authenticate(params[:session][:password])
       unless user.confirmed?
-        flash.now[:alert] = 'メールアドレスの確認が必要です。確認メールを送信しました。'
+        flash.now[:alert] = 'メールアドレスの確認が必要です。確認メールを再送信しました。'
         user.send_confirmation_email
         render :new
         return

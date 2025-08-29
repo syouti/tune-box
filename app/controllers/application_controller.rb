@@ -32,6 +32,13 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  def require_confirmed_user
+    if user_signed_in? && !current_user.confirmed?
+      flash[:alert] = 'メールアドレスの確認が必要です。'
+      redirect_to login_path
+    end
+  end
+
   def require_login_or_guest
     # ゲストパラメータがある場合はゲストモードを設定
     session[:guest_mode] = true if params[:guest] == 'true' && !user_signed_in?

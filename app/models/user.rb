@@ -36,6 +36,15 @@ class User < ApplicationRecord
     confirmation_sent_at.present? && confirmation_sent_at < 24.hours.ago
   end
 
+  # メール確認前はアカウントを無効化
+  def active_for_authentication?
+    super && confirmed?
+  end
+
+  def inactive_message
+    confirmed? ? super : :unconfirmed
+  end
+
   private
 
   def password_required?
