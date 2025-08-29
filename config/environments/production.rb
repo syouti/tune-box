@@ -53,6 +53,24 @@ Rails.application.configure do
   # caching is enabled.
   config.action_mailer.perform_caching = false
 
+  # 本番環境のメール設定
+  config.action_mailer.default_url_options = { host: 'tunebox.jp', protocol: 'https' }
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = true
+
+  config.action_mailer.smtp_settings = {
+    address: ENV['SMTP_ADDRESS'],
+    port: ENV['SMTP_PORT'],
+    domain: ENV['SMTP_DOMAIN'],
+    user_name: ENV['SMTP_USERNAME'],
+    password: ENV['SMTP_PASSWORD'],
+    authentication: 'plain',
+    enable_starttls_auto: true
+  }
+
+  config.action_mailer.default_from = ENV['MAIL_FROM'] || 'TuneBox <syoutiroukun@gmail.com>'
+
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
   config.i18n.fallbacks = true
