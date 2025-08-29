@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_08_28_000002) do
+ActiveRecord::Schema[7.2].define(version: 2025_08_29_193258) do
   create_table "albums", force: :cascade do |t|
     t.string "spotify_id"
     t.string "name"
@@ -104,6 +104,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_28_000002) do
     t.datetime "trial_ends_at"
     t.datetime "last_login_at"
     t.integer "login_count", default: 0
+    t.datetime "confirmed_at"
+    t.string "confirmation_token"
+    t.datetime "confirmation_sent_at"
     t.index ["created_at"], name: "index_users_on_created_at"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["premium"], name: "index_users_on_premium"

@@ -36,6 +36,14 @@ gem 'httparty'
 gem 'mini_magick'
 gem 'chunky_png'
 
+# セキュリティ強化
+gem 'rack-attack'
+
+# 開発環境でのメール確認用
+group :development do
+  gem 'letter_opener'
+end
+
 
 group :development, :test do
   # Use sqlite3 as the database for Active Record

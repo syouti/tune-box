@@ -1,4 +1,8 @@
 Rails.application.routes.draw do
+  # メール確認機能
+  get 'confirm_email', to: 'email_confirmations#confirm'
+  get 'resend_confirmation', to: 'email_confirmations#resend'
+  post 'resend_confirmation', to: 'email_confirmations#resend'
 
   root 'home#index'
   get "home/index"
@@ -44,6 +48,9 @@ Rails.application.routes.draw do
   post 'login', to: 'sessions#create'
   delete 'logout', to: 'sessions#destroy'
   get 'logout', to: 'sessions#destroy'
+
+  # セッションクリア用（開発環境のみ）
+  get 'clear_session', to: 'sessions#clear_session' if Rails.env.development?
 
     # Health check
   get "up" => "rails/health#show", as: :rails_health_check

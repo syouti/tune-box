@@ -14,6 +14,10 @@ class ApplicationController < ActionController::Base
 
   def current_user
     @current_user ||= User.find(session[:user_id]) if session[:user_id]
+  rescue ActiveRecord::RecordNotFound
+    # ユーザーが見つからない場合はセッションをクリア
+    session[:user_id] = nil
+    nil
   end
 
   def guest_user?
@@ -47,8 +51,9 @@ class ApplicationController < ActionController::Base
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
 
-    # CSP (Content Security Policy) の設定（開発環境では緩和）
+    # CSP (Content Security Policy) の設定（セキュリティ強化）
     if Rails.env.development?
+      # 開発環境ではGoogle AdSenseの動作確認のため一時的に緩和
       csp_policy = [
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
@@ -56,17 +61,24 @@ class ApplicationController < ActionController::Base
         "img-src 'self' data: https: http:",
         "font-src 'self' https:",
         "connect-src 'self' https:",
-        "frame-ancestors 'none'"
+        "frame-src 'self' https:",
+        "frame-ancestors 'none'",
+        "object-src 'none'",
+        "base-uri 'self'"
       ].join('; ')
     else
       csp_policy = [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com",
+        "script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com https://pagead2.googlesyndication.com https://ep2.adtrafficquality.google",
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com",
-        "img-src 'self' data: https: http:",
+        "img-src 'self' data: https: http: https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net",
         "font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.gstatic.com",
-        "connect-src 'self' https://api.spotify.com https://www.google-analytics.com",
-        "frame-ancestors 'none'"
+        "connect-src 'self' https://api.spotify.com https://www.google-analytics.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google",
+        "frame-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://ep2.adtrafficquality.google https://www.google.com",
+        "frame-ancestors 'none'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'"
       ].join('; ')
     end
 

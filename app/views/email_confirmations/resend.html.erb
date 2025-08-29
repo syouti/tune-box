@@ -1,0 +1,31 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="text-center">メール確認の再送信</h3>
+        </div>
+        <div class="card-body">
+          <p class="text-muted mb-4">
+            メールアドレスの確認が完了していない場合、確認メールを再送信できます。
+          </p>
+          
+          <%= form_with url: resend_confirmation_path, method: :post, local: true do |form| %>
+            <div class="mb-3">
+              <%= form.label :email, "メールアドレス", class: "form-label" %>
+              <%= form.email_field :email, class: "form-control", required: true, placeholder: "example@email.com" %>
+            </div>
+            
+            <div class="d-grid">
+              <%= form.submit "確認メールを再送信", class: "btn btn-primary" %>
+            </div>
+          <% end %>
+          
+          <div class="text-center mt-3">
+            <%= link_to "ログインページに戻る", login_path, class: "text-decoration-none" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

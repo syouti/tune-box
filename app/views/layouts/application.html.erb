@@ -209,7 +209,7 @@
           </ul>
 
           <ul class="navbar-nav">
-            <% if defined?(current_user) && current_user %>
+            <% if user_signed_in? %>
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                   <i class="fas fa-user-circle me-2"></i>

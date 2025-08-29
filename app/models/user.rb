@@ -14,6 +14,28 @@ class User < ApplicationRecord
   # セキュリティ: データのサニタイズ
   before_save :sanitize_data
 
+  # メール確認機能
+  def confirmed?
+    confirmed_at.present?
+  end
+
+  def send_confirmation_email
+    self.confirmation_token = SecureRandom.urlsafe_base64
+    self.confirmation_sent_at = Time.current
+    save!
+    UserMailer.confirmation_email(self).deliver_now
+  end
+
+  def confirm_email!
+    self.confirmed_at = Time.current
+    self.confirmation_token = nil
+    save!
+  end
+
+  def confirmation_expired?
+    confirmation_sent_at.present? && confirmation_sent_at < 24.hours.ago
+  end
+
   private
 
   def password_required?
