@@ -6,6 +6,7 @@
 
   <div class="auth-form">
     <%= form_with scope: :session, url: login_path, local: true do |form| %>
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
       <div class="form-group">
         <%= form.label :email, "メールアドレス", class: "form-label" %>
         <%= form.email_field :email, class: "form-input", placeholder: "example@email.com" %>
