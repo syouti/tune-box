@@ -7,8 +7,8 @@ class FavoriteAlbumsController < ApplicationController
     start_time = Time.current
     @favorite_albums = current_user.favorite_albums.order(:created_at)
 
-    log_user_action('view_canvas', { album_count: @favorite_albums.count })
-    log_performance('canvas_load', ((Time.current - start_time) * 1000).round)
+    # log_user_action('view_canvas', { album_count: @favorite_albums.count })
+    # log_performance('canvas_load', ((Time.current - start_time) * 1000).round)
 
     respond_to do |format|
       format.html
@@ -22,7 +22,7 @@ class FavoriteAlbumsController < ApplicationController
 
     # パラメータのバリデーション
     unless params[:favorite_album]
-      log_error(StandardError.new('Missing favorite_album parameter'), { action: 'toggle' })
+      # log_error(StandardError.new('Missing favorite_album parameter'), { action: 'toggle' })
       render json: {
         status: 'error',
         message: 'データが不正です'
@@ -34,7 +34,7 @@ class FavoriteAlbumsController < ApplicationController
 
     # Spotify IDの検証
     if spotify_id.blank? || !valid_spotify_id?(spotify_id)
-      log_error(StandardError.new('Invalid Spotify ID'), { action: 'toggle', spotify_id: spotify_id })
+      # log_error(StandardError.new('Invalid Spotify ID'), { action: 'toggle', spotify_id: spotify_id })
       render json: {
         status: 'error',
         message: 'Spotify IDが無効です'
@@ -47,18 +47,18 @@ class FavoriteAlbumsController < ApplicationController
     if existing_album
       # 削除処理
       if existing_album.destroy
-        log_user_action('remove_album', {
-          album_id: existing_album.id,
-          album_name: existing_album.name,
-          current_count: current_user.favorite_albums.count
-        })
+        # log_user_action('remove_album', {
+        #   album_id: existing_album.id,
+        #   album_name: existing_album.name,
+        #   current_count: current_user.favorite_albums.count
+        # })
         render json: {
           status: 'removed',
           message: 'コレクションから削除しました',
           current_count: current_user.favorite_albums.count
         }
       else
-        log_error(existing_album.errors, { action: 'remove_album', album_id: existing_album.id })
+        # log_error(existing_album.errors, { action: 'remove_album', album_id: existing_album.id })
         render json: {
           status: 'error',
           message: '削除に失敗しました'
@@ -91,13 +91,13 @@ class FavoriteAlbumsController < ApplicationController
       )
 
       if favorite_album.save
-        log_user_action('add_album', {
-          album_id: favorite_album.id,
-          album_name: favorite_album.name,
-          artist: favorite_album.artist,
-          current_count: current_user.favorite_albums.count,
-          position: position
-        })
+        # log_user_action('add_album', {
+        #   album_id: favorite_album.id,
+        #   album_name: favorite_album.name,
+        #   artist: favorite_album.artist,
+        #   current_count: current_user.favorite_albums.count,
+        #   position: position
+        # })
         render json: {
           status: 'added',
           message: 'コレクションに追加しました',
@@ -110,7 +110,7 @@ class FavoriteAlbumsController < ApplicationController
           }
         }
       else
-        log_error(favorite_album.errors, { action: 'add_album', spotify_id: spotify_id })
+        # log_error(favorite_album.errors, { action: 'add_album', spotify_id: spotify_id })
         render json: {
           status: 'error',
           message: '保存に失敗しました: ' + favorite_album.errors.full_messages.join(', ')

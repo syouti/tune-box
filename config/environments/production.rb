@@ -23,16 +23,13 @@ Rails.application.configure do
   config.action_controller.perform_caching = true
   config.cache_store = :memory_store, { size: 64.megabytes }
 
-  # ログ設定
-  config.log_level = :info
-  config.log_tags = [:request_id, :remote_ip]
+  # ログ設定（最小限）
+  config.log_level = :error
+  config.log_tags = [:request_id]
 
-  # セキュリティヘッダー
+  # セキュリティヘッダー（最小限）
   config.public_file_server.headers = {
-    'Cache-Control' => 'public, max-age=31536000',
-    'X-Content-Type-Options' => 'nosniff',
-    'X-Frame-Options' => 'DENY',
-    'X-XSS-Protection' => '1; mode=block'
+    'Cache-Control' => 'public, max-age=31536000'
   }
 
   # Ensures that a master key has been made available in ENV["RAILS_MASTER_KEY"], config/master.key, or an environment

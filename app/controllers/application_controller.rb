@@ -3,12 +3,12 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception, prepend: true
 
   include SessionsHelper
-  include LogHelper
+  # include LogHelper
 
   helper_method :current_user, :user_signed_in?, :guest_session_id, :guest_favorite_albums, :guest_user?
 
-  # 基本的なセキュリティヘッダーを追加（機能に影響なし）
-  before_action :set_basic_security_headers
+  # 基本的なセキュリティヘッダーを追加（一時的に無効化）
+  # before_action :set_basic_security_headers
 
 
 
