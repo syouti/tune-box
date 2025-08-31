@@ -22,8 +22,6 @@ Rails.application.configure do
   config.assets.compile = false
   config.assets.digest = true
   config.assets.version = "1.0"
-  config.assets.js_compressor = :terser
-  config.assets.css_compressor = :sass
   config.assets.initialize_on_precompile = false
   config.log_to_stdout = true
 end
