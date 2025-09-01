@@ -7,10 +7,11 @@ class UsersController < ApplicationController
     @user = User.new(user_params)
 
     if @user.save
-      # メール確認を送信
-      @user.send_confirmation_email
+      # メール確認を一時的に無効化（直接確認済みにする）
+      # @user.send_confirmation_email
+      @user.update(confirmed_at: Time.current) rescue nil
 
-      redirect_to login_path, notice: 'アカウントが作成されました！メールアドレスの確認をお願いします。'
+      redirect_to login_path, notice: 'アカウントが作成されました！ログインしてください。'
     else
       render :new
     end
