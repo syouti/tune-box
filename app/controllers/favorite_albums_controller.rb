@@ -4,7 +4,6 @@ class FavoriteAlbumsController < ApplicationController
   # before_action :require_confirmed_user  # 一時的に無効化
 
   def index
-    start_time = Time.current
     @favorite_albums = current_user.favorite_albums.order(:created_at)
 
     # log_user_action('view_canvas', { album_count: @favorite_albums.count })
