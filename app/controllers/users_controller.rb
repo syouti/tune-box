@@ -7,11 +7,16 @@ class UsersController < ApplicationController
     @user = User.new(user_params)
 
     if @user.save
-      # メール確認を一時的に無効化（直接確認済みにする）
-      # @user.send_confirmation_email
-      @user.update(confirmed_at: Time.current) rescue nil
-
-      redirect_to login_path, notice: 'アカウントが作成されました！ログインしてください。'
+      # メール確認メールを送信（段階的に有効化）
+      begin
+        @user.send_confirmation_email
+        redirect_to login_path, notice: 'アカウントが作成されました！確認メールを送信しました。メールを確認してログインしてください。'
+      rescue => e
+        Rails.logger.error "Email sending failed: #{e.message}"
+        # メール送信に失敗した場合は直接確認済みにする（フォールバック）
+        @user.update(confirmed_at: Time.current) rescue nil
+        redirect_to login_path, notice: 'アカウントが作成されました！ログインしてください。'
+      end
     else
       render :new
     end

@@ -1,7 +1,7 @@
 # app/controllers/favorite_albums_controller.rb
 class FavoriteAlbumsController < ApplicationController
   before_action :require_login
-  # before_action :require_confirmed_user  # 一時的に無効化
+  before_action :require_confirmed_user  # メール認証を有効化
 
   def index
     @favorite_albums = current_user.favorite_albums.order(:created_at)

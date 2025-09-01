@@ -7,13 +7,17 @@ class SessionsController < ApplicationController
     user = User.find_by(email: params[:session][:email].downcase)
 
     if user && user.authenticate(params[:session][:password])
-      # メール認証チェックを一時的に無効化
-      # unless user.confirmed?
-      #   flash.now[:alert] = 'メールアドレスの確認が必要です。確認メールを再送信しました。'
-      #   user.send_confirmation_email
-      #   render :new
-      #   return
-      # end
+      # メール認証チェック（段階的に有効化）
+      unless user.confirmed?
+        flash.now[:alert] = 'メールアドレスの確認が必要です。確認メールを再送信しました。'
+        begin
+          user.send_confirmation_email
+        rescue => e
+          Rails.logger.error "Confirmation email resend failed: #{e.message}"
+        end
+        render :new
+        return
+      end
 
       # セッション固定攻撃対策
       reset_session
@@ -27,7 +31,7 @@ class SessionsController < ApplicationController
       flash.now[:alert] = 'メールアドレスまたはパスワードが正しくありません。'
       render :new
     end
-  end
+    end
 
   def destroy
     session[:user_id] = nil
