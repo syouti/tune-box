@@ -11,9 +11,16 @@ class SessionsController < ApplicationController
       unless user.confirmed?
         flash.now[:alert] = 'メールアドレスの確認が必要です。確認メールを再送信しました。'
         begin
+          # 本番環境でのメール設定確認ログ
+          if Rails.env.production?
+            Rails.logger.info "Production mailer config: #{Rails.application.config.action_mailer.smtp_settings}"
+            Rails.logger.info "SMTP environment variables: ADDRESS=#{ENV['SMTP_ADDRESS']}, USERNAME=#{ENV['SMTP_USERNAME']}, DOMAIN=#{ENV['SMTP_DOMAIN']}"
+          end
+          
           user.send_confirmation_email
         rescue => e
           Rails.logger.error "Confirmation email resend failed: #{e.message}"
+          Rails.logger.error "Backtrace: #{e.backtrace.join("\n")}"
         end
         render :new
         return

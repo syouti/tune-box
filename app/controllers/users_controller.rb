@@ -9,10 +9,17 @@ class UsersController < ApplicationController
     if @user.save
       # メール確認メールを送信（段階的に有効化）
       begin
+        # 本番環境でのメール設定確認ログ
+        if Rails.env.production?
+          Rails.logger.info "Production mailer config: #{Rails.application.config.action_mailer.smtp_settings}"
+          Rails.logger.info "SMTP environment variables: ADDRESS=#{ENV['SMTP_ADDRESS']}, USERNAME=#{ENV['SMTP_USERNAME']}, DOMAIN=#{ENV['SMTP_DOMAIN']}"
+        end
+        
         @user.send_confirmation_email
         redirect_to login_path, notice: 'アカウントが作成されました！確認メールを送信しました。メールを確認してログインしてください。'
       rescue => e
         Rails.logger.error "Email sending failed: #{e.message}"
+        Rails.logger.error "Backtrace: #{e.backtrace.join("\n")}"
         # メール送信に失敗した場合は直接確認済みにする（フォールバック）
         @user.update(confirmed_at: Time.current) rescue nil
         redirect_to login_path, notice: 'アカウントが作成されました！ログインしてください。'
